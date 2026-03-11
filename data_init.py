@@ -137,10 +137,7 @@ FACULTY_TO_STUDY_PROGRAMMES = {
     "UP FTS - TURISTICA": ["Tourism", "Sustainable Tourism", "Hospitality Management"],
 }
 
-
-# -----------------------------
 # Helper functions
-# -----------------------------
 
 def random_date_in_year(year: int) -> date:
     """Return a random date within the given calendar year."""
@@ -194,10 +191,7 @@ def normalize_scalar(value: Any) -> Any:
     """
     return value
 
-
-# -----------------------------
 # Generic row generation
-# -----------------------------
 
 def generate_value(
     column: str,
@@ -485,9 +479,8 @@ GRADUATES_SCHEMA: dict[str, Any] = {
     "last_name": {"type": "generated", "generator": "last_name"},
     "first_name": {"type": "generated", "generator": "first_name"},
     "study_type": [
-        "Bachelor programme",
-        "Master programme",
-        "Doctoral programme",
+        "University",
+        "Professional",
     ],
     "faculty": [
         "UP FHŠ",
@@ -501,8 +494,6 @@ GRADUATES_SCHEMA: dict[str, Any] = {
     "graduation_date": {"type": "generated", "generator": "graduation_date"},
 }
 
-
-# Example usage
 
 if __name__ == "__main__":
     base_dir = Path(__file__).resolve().parent
