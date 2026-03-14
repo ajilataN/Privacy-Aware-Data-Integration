@@ -1,7 +1,7 @@
 from src.loader import load_dataset
 from src.preprocess import clean_mobility_data, clean_graduates_data, aggregate_mobility_per_student
 from src.dataset_integration import integrate_datasets
-from src.anonymization import remove_identifiers, compute_equivalence_classes, compute_max_k
+from src.anonymization import generalize_degree_level, generalize_faculty, remove_identifiers, compute_equivalence_classes, compute_max_k
 
 
 def main():
@@ -35,12 +35,30 @@ def main():
 
     anonymization_input = remove_identifiers(merged_df)
 
-    QI = ["faculty", "study_type", "degree_level", "graduation_year"]
+    QI = ["faculty", "degree_level", "graduation_year"]
+
+    print("\n Before generalization")
+
     groups = compute_equivalence_classes(anonymization_input, QI)
     print(groups.describe())
 
     max_k = compute_max_k(groups)
-    print("\nMaximum possible k for this dataset:", max_k)
+    print("\nMaximum possible k:", max_k)
+
+
+    # Apply generalization
+    generalized_df = generalize_degree_level(anonymization_input)
+    generalized_df = generalize_faculty(generalized_df)
+
+    print("\n After generalization")
+
+    groups_generalized = compute_equivalence_classes(generalized_df, QI)
+    print(groups_generalized.describe())
+
+    max_k_generalized = compute_max_k(groups_generalized)
+    print("\nMaximum possible k after generalization:", max_k_generalized)
+
+    print(groups_generalized.sort_values("group_size").head(10))
 
 if __name__ == "__main__":
     main()
