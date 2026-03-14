@@ -86,6 +86,7 @@ def aggregate_mobility_per_student(df: pd.DataFrame) -> pd.DataFrame:
             mobility_count=("enrollment_number", "count"),
             first_mobility_year=("mobility_year", "min"),
             last_mobility_year=("mobility_year", "max"),
+            degree_level=("degree_level", "first"),
         )
         .reset_index()
     )

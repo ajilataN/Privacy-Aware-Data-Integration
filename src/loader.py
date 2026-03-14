@@ -61,10 +61,10 @@ def load_dataset(folder_path, years_to_include=1, target_year=None):
     files = list_excel_files(folder_path)
     selected_files = select_files(files, years_to_include, target_year)
 
-    print(f"Loading {len(selected_files)} files from {folder_path}")
+    # print(f"Loading {len(selected_files)} files from {folder_path}")
 
     df = load_excel_files(selected_files)
 
-    print(f"Loaded dataset shape: {df.shape}")
+    # print(f"Loaded dataset shape: {df.shape}")
 
     return df

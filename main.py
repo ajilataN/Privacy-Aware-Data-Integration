@@ -1,6 +1,7 @@
 from src.loader import load_dataset
 from src.preprocess import clean_mobility_data, clean_graduates_data, aggregate_mobility_per_student
 from src.dataset_integration import integrate_datasets
+from src.anonymization import remove_identifiers, compute_equivalence_classes, compute_max_k
 
 
 def main():
@@ -32,10 +33,14 @@ def main():
     # 4. Integrate
     merged_df = integrate_datasets(graduates_df, mobility_summary_df)
 
-    print("\nMerged dataset shape:", merged_df.shape)
-    print("\nMerged dataset preview:")
-    print(merged_df.head())
+    anonymization_input = remove_identifiers(merged_df)
 
+    QI = ["faculty", "study_type", "degree_level", "graduation_year"]
+    groups = compute_equivalence_classes(anonymization_input, QI)
+    print(groups.describe())
+
+    max_k = compute_max_k(groups)
+    print("\nMaximum possible k for this dataset:", max_k)
 
 if __name__ == "__main__":
     main()
