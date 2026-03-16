@@ -1,24 +1,35 @@
 from src.loader import load_dataset
 from src.preprocess import clean_mobility_data, clean_graduates_data, aggregate_mobility_per_student
 from src.dataset_integration import integrate_datasets
-from src.anonymization import generalize_degree_level, generalize_faculty, remove_identifiers, compute_equivalence_classes, compute_max_k, compute_l_diversity, compute_t_closeness 
+from src.anonymization import (
+    generalize_degree_level,
+    generalize_faculty,
+    remove_identifiers,
+    compute_equivalence_classes,
+    compute_max_k,
+    compute_l_diversity,
+    compute_t_closeness,
+    suppress_small_equivalence_classes,
+)
 
 def main():
     mobility_path = "data/mobility"
     graduates_path = "data/graduates"
 
-    years_to_include = 1
+    mobility_years_to_include = 5
+    graduates_years_to_include = 5
     target_year = None
+    target_k = 3
 
     # 1. Load
     mobility_df = load_dataset(
         mobility_path,
-        years_to_include=years_to_include,
+        years_to_include=mobility_years_to_include,
         target_year=target_year,
     )
     graduates_df = load_dataset(
         graduates_path,
-        years_to_include=years_to_include,
+        years_to_include=graduates_years_to_include,
         target_year=target_year,
     )
 
@@ -31,6 +42,7 @@ def main():
 
     # 4. Integrate
     merged_df = integrate_datasets(graduates_df, mobility_summary_df)
+    merged_df.to_excel("output/merged_dataset.xlsx", index=False)
 
     anonymization_input = remove_identifiers(merged_df)
 
@@ -38,7 +50,7 @@ def main():
 
     SENSITIVE_ATTRIBUTES = [
         "had_mobility",
-        "mobility_count",
+        "mobility_count_bucket",
         "eu_noneu",
         "short_long_term",
     ]
@@ -55,6 +67,9 @@ def main():
     # Apply generalization
     generalized_df = generalize_degree_level(anonymization_input)
     generalized_df = generalize_faculty(generalized_df)
+    anonymized_df = suppress_small_equivalence_classes(generalized_df, QI, min_k=target_k)
+
+    anonymized_df.to_excel("output/anonymized_dataset.xlsx", index=False)
 
     print("\n After generalization")
 
@@ -66,19 +81,38 @@ def main():
 
     print(groups_generalized.sort_values("group_size").head(10))
 
+    print(f"\nRows after suppressing groups smaller than k={target_k}: {len(anonymized_df)}")
+
+    if anonymized_df.empty:
+        print("\nNo rows remain after suppression. Lower target_k or regenerate a denser dataset.")
+        return
+
+    report_df = (
+        anonymized_df.groupby("graduation_year")
+        .agg(
+            graduates=("had_mobility", "size"),
+            graduates_with_mobility=("had_mobility", "sum"),
+        )
+        .reset_index()
+    )
+    report_df["mobility_share"] = (
+        report_df["graduates_with_mobility"] / report_df["graduates"]
+    ).round(3)
+    report_df.to_excel("output/mobility_report_summary.xlsx", index=False)
+
 
     for sensitive in SENSITIVE_ATTRIBUTES:
 
         print(f"\nEvaluating sensitive attribute: {sensitive}")
 
-        l_groups = compute_l_diversity(anonymization_input, QI, sensitive)
+        l_groups = compute_l_diversity(anonymized_df, QI, sensitive)
 
         print("L-diversity statistics:")
         print(l_groups["l_diversity"].describe())
 
         print("Minimum L-diversity:", l_groups["l_diversity"].min())
 
-        t_groups = compute_t_closeness(anonymization_input, QI, sensitive)
+        t_groups = compute_t_closeness(anonymized_df, QI, sensitive)
 
         print("T-closeness statistics:")
         print(t_groups["t_distance"].describe())

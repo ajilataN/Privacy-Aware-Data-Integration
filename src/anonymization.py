@@ -28,6 +28,8 @@ FACULTY_GENERALIZATION = {
     "UP FTS - TURISTICA": "Tourism",
 }
 
+FACULTY_GENERALIZATION["UP FHS"] = "Social Sciences"
+
 def remove_identifiers(df: pd.DataFrame) -> pd.DataFrame:
     """
     Removes direct identifiers and technical columns which are not in interest.
@@ -64,6 +66,29 @@ def compute_max_k(groups):
         return 0
 
     return groups["group_size"].min()
+
+
+def suppress_small_equivalence_classes(
+    df: pd.DataFrame,
+    quasi_identifiers: list,
+    min_k: int,
+) -> pd.DataFrame:
+    """
+    Removes records that belong to equivalence classes smaller than min_k.
+    """
+
+    group_sizes = (
+        df.groupby(quasi_identifiers)
+        .size()
+        .reset_index(name="group_size")
+    )
+
+    valid_groups = group_sizes[group_sizes["group_size"] >= min_k].drop(columns="group_size")
+
+    if valid_groups.empty:
+        return df.iloc[0:0].copy()
+
+    return df.merge(valid_groups, on=quasi_identifiers, how="inner")
 
 def generalize_degree_level(df: pd.DataFrame) -> pd.DataFrame:
     """

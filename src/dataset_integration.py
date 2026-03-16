@@ -1,6 +1,14 @@
 import pandas as pd
 
 
+def bucket_mobility_count(value: int) -> str:
+    if value <= 0:
+        return "0"
+    if value == 1:
+        return "1"
+    return "2+"
+
+
 def integrate_datasets(
     graduates_df: pd.DataFrame,
     mobility_summary_df: pd.DataFrame,
@@ -22,6 +30,13 @@ def integrate_datasets(
 
     if "had_mobility" in merged_df.columns:
         merged_df["had_mobility"] = merged_df["had_mobility"].fillna(0).astype(int)
+
+    for col in ["eu_noneu", "short_long_term"]:
+        if col in merged_df.columns:
+            merged_df[col] = merged_df[col].fillna("No mobility")
+
+    if "mobility_count" in merged_df.columns:
+        merged_df["mobility_count_bucket"] = merged_df["mobility_count"].apply(bucket_mobility_count)
 
     for col in ["first_mobility_year", "last_mobility_year"]:
         if col in merged_df.columns:

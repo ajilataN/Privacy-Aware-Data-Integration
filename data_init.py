@@ -1,25 +1,22 @@
 from __future__ import annotations
 
 import random
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
-from typing import Any
 
 import pandas as pd
 
 
-# Fake data resources
-
 FIRST_NAMES = [
     "Ana", "Luka", "Sara", "Matej", "Nika", "Jan", "Tina", "Rok",
-    "Eva", "David", "Maja", "Nejc", "Kaja", "Miha", "Nina", "Žan",
-    "Urška", "Marko", "Tjaša", "Aljaž"
+    "Eva", "David", "Maja", "Nejc", "Kaja", "Miha", "Nina", "Zan",
+    "Urska", "Marko", "Tjasa", "Aljaz",
 ]
 
 LAST_NAMES = [
-    "Novak", "Kovač", "Horvat", "Zupan", "Potočnik", "Kranjc", "Mlakar",
-    "Bizjak", "Pirnat", "Oblak", "Šmit", "Klemenčič", "Vidmar", "Kos",
-    "Turk", "Jereb", "Kastelic", "Božič", "Korošec", "Golob"
+    "Novak", "Kovac", "Horvat", "Zupan", "Potocnik", "Kranjc", "Mlakar",
+    "Bizjak", "Pirnat", "Oblak", "Smit", "Klemencic", "Vidmar", "Kos",
+    "Turk", "Jereb", "Kastelic", "Bozic", "Korosec", "Golob",
 ]
 
 EU_COUNTRIES = {
@@ -49,7 +46,7 @@ EU_COUNTRIES = {
     "Slovakia",
     "Slovenia",
     "Spain",
-    "Sweden"
+    "Sweden",
 }
 
 COUNTRY_TO_INSTITUTIONS = {
@@ -128,7 +125,7 @@ COUNTRY_TO_INSTITUTIONS = {
 }
 
 FACULTY_TO_STUDY_PROGRAMMES = {
-    "UP FHŠ": ["Psychology", "Sociology", "History", "Geography", "Media Studies"],
+    "UP FHS": ["Psychology", "Sociology", "History", "Geography", "Media Studies"],
     "UP FM": ["Management", "Finance", "Economics", "International Business"],
     "UP FAMNIT": ["Mathematics", "Computer Science", "Biodiversity", "Data Science"],
     "UP FVZ": ["Nursing", "Physiotherapy", "Health Sciences"],
@@ -137,28 +134,46 @@ FACULTY_TO_STUDY_PROGRAMMES = {
     "UP FTS - TURISTICA": ["Tourism", "Sustainable Tourism", "Hospitality Management"],
 }
 
-# Helper functions
+FACULTIES = list(FACULTY_TO_STUDY_PROGRAMMES.keys())
 
-def random_date_in_year(year: int) -> date:
-    """Return a random date within the given calendar year."""
-    start = date(year, 1, 1)
-    end = date(year, 12, 31)
-    return start + timedelta(days=random.randint(0, (end - start).days))
+MOBILITY_PROGRAMMES = [
+    "Erasmus+ KA131",
+    "Erasmus+ KA171",
+    "Erasmus+ KA2",
+    "CEEPUS",
+    "Interstate agreement",
+    "COST",
+    "ARIS bilateral agreement",
+    "Marie Curie & ARIS scheme",
+    "Freemover",
+    "Inter-university agreement",
+    "Fulbright",
+    "T4EU",
+    "Other projects",
+    "Other",
+]
 
-def academic_year_from_calendar_year(year: int) -> str:
-    """
-    For yearly output file YYYY, use academic year YYYY-1/YYYY.
-    Example: file 2026 -> academic_year = 2025/2026
-    """
-    return f"{year - 1}/{year}"
+MOBILITY_TYPES = [
+    "Study",
+    "Traineeship",
+    "Teaching",
+    "Training",
+    "Conference",
+    "Meeting",
+    "Research",
+    "Research and teaching",
+    "Other",
+]
 
+COUNTRIES = list(COUNTRY_TO_INSTITUTIONS.keys())
 
-def create_enrollment_number(year: int, file_index: int, row_index: int) -> str:
-    """
-    Generates a unique-looking enrollment number per file and row.
-    Example: 202600100001
-    """
-    return f"{year}{file_index:02d}{row_index:05d}"
+DEGREE_LEVELS = ["Bachelor", "Master", "PhD"]
+STUDY_TYPES = ["University", "Professional"]
+FULL_PARTTIME = ["Full-time", "Part-time"]
+SHORT_LONG_TERM = ["Short-term", "Long-term"]
+GENERALIZED_DEGREE_LEVELS = ["Undergraduate", "Graduate"]
+
+MOBILITY_PARTICIPATION_RATE = 0.30
 
 
 def is_eu_country(country: str) -> str:
@@ -179,345 +194,292 @@ def choose_study_programme(faculty: str) -> str:
     return "General Studies"
 
 
-def safe_base_filename(output_dir: Path, base_filename: str | None) -> str:
-    return base_filename if base_filename else output_dir.name
+def create_enrollment_number(graduation_year: int, student_index: int) -> str:
+    return f"S{graduation_year}{student_index:05d}"
 
 
-def normalize_scalar(value: Any) -> Any:
-    """
-    Converts simple shorthands:
-    - plain list -> random choice
-    - plain scalar -> constant
-    """
-    return value
-
-# Generic row generation
-
-def generate_value(
-    column: str,
-    spec: Any,
-    row: dict[str, Any],
-    *,
-    year: int,
-    file_index: int,
-    row_index: int,
-) -> Any:
-    """
-    Supported spec formats:
-
-    1) List:
-       {"faculty": ["UP FHŠ", "UP FM"]}
-       -> random choice from list
-
-    2) Constant:
-       {"number": 1}
-       -> always 1
-
-    3) Dict spec:
-       {
-           "type": "choice",
-           "values": [...]
-       }
-       {
-           "type": "weighted_choice",
-           "values": [...],
-           "weights": [...]
-       }
-       {
-           "type": "generated",
-           "generator": "first_name" | "last_name" | "enrollment_number" |
-                        "date" | "graduation_date" | "academic_year" |
-                        "year_from" | "year_to" | "eu_noneu" |
-                        "partner_institution" | "study_programme"
-       }
-       {
-           "type": "constant",
-           "value": ...
-       }
-    """
-    spec = normalize_scalar(spec)
-
-    if isinstance(spec, list):
-        return random.choice(spec)
-
-    if not isinstance(spec, dict):
-        return spec
-
-    spec_type = spec.get("type", "choice")
-
-    if spec_type == "constant":
-        return spec["value"]
-
-    if spec_type == "choice":
-        return random.choice(spec["values"])
-
-    if spec_type == "weighted_choice":
-        return random.choices(spec["values"], weights=spec["weights"], k=1)[0]
-
-    if spec_type == "generated":
-        generator = spec["generator"]
-
-        if generator == "first_name":
-            return random.choice(FIRST_NAMES)
-
-        if generator == "last_name":
-            return random.choice(LAST_NAMES)
-
-        if generator == "enrollment_number":
-            return create_enrollment_number(year, file_index, row_index)
-
-        if generator == "date":
-            return random_date_in_year(year)
-
-        if generator == "graduation_date":
-            return random_date_in_year(year)
-
-        if generator == "academic_year":
-            return academic_year_from_calendar_year(year)
-
-        if generator == "year_from":
-            return year
-
-        if generator == "year_to":
-            # If mobility is long-term and date is late in the year,
-            # allow crossing into next year; otherwise keep same year.
-            short_long = row.get("short_long_term")
-            generated_date = row.get("date")
-            if short_long == "Long-term" and isinstance(generated_date, date) and generated_date.month >= 10:
-                return year + 1
-            return year
-
-        if generator == "eu_noneu":
-            country = row.get("country")
-            return is_eu_country(country) if country else "Unknown"
-
-        if generator == "partner_institution":
-            country = row.get("country")
-            return choose_partner_institution(country) if country else "Unknown Partner Institution"
-
-        if generator == "study_programme":
-            faculty = row.get("faculty")
-            return choose_study_programme(faculty) if faculty else "General Studies"
-
-        raise ValueError(f"Unknown generator: {generator}")
-
-    raise ValueError(f"Unsupported spec type: {spec_type}")
+def random_date_in_year(year: int, month_start: int = 1, month_end: int = 12) -> date:
+    month = random.randint(month_start, month_end)
+    day = random.randint(1, 28)
+    return date(year, month, day)
 
 
-def generate_records_for_year(
-    schema: dict[str, Any],
-    records_per_file: int,
-    year: int,
-    file_index: int,
+def academic_year_from_calendar_year(year: int) -> str:
+    return f"{year - 1}/{year}"
+
+
+def choose_degree_level() -> str:
+    return random.choices(
+        DEGREE_LEVELS,
+        weights=[0.65, 0.28, 0.07],
+        k=1,
+    )[0]
+
+
+def raw_degree_from_generalized(generalized_degree_level: str) -> str:
+    if generalized_degree_level == "Undergraduate":
+        return "Bachelor"
+
+    return random.choices(
+        ["Master", "PhD"],
+        weights=[0.85, 0.15],
+        k=1,
+    )[0]
+
+
+def choose_study_type(degree_level: str) -> str:
+    if degree_level == "Bachelor":
+        return random.choices(STUDY_TYPES, weights=[0.6, 0.4], k=1)[0]
+    return "University"
+
+
+def cohort_mobility_participants(student_ids: list[str]) -> set[str]:
+    participant_count = round(len(student_ids) * MOBILITY_PARTICIPATION_RATE)
+    return set(random.sample(student_ids, participant_count))
+
+
+def distributed_counts(total: int, bucket_count: int) -> list[int]:
+    base_count = total // bucket_count
+    remainder = total % bucket_count
+
+    return [
+        base_count + (1 if bucket_index < remainder else 0)
+        for bucket_index in range(bucket_count)
+    ]
+
+
+def build_student_profiles(
+    graduation_years: list[int],
+    graduates_per_year: int,
+) -> list[dict[str, object]]:
+    profiles: list[dict[str, object]] = []
+    qi_buckets = [
+        (faculty, generalized_degree_level)
+        for faculty in FACULTIES
+        for generalized_degree_level in GENERALIZED_DEGREE_LEVELS
+    ]
+
+    for graduation_year in graduation_years:
+        students_per_bucket = distributed_counts(graduates_per_year, len(qi_buckets))
+        student_index = 1
+
+        for (faculty, generalized_degree_level), bucket_size in zip(qi_buckets, students_per_bucket):
+            for _ in range(bucket_size):
+                degree_level = raw_degree_from_generalized(generalized_degree_level)
+                enrollment_number = create_enrollment_number(graduation_year, student_index)
+                student_index += 1
+
+                profiles.append(
+                    {
+                        "enrollment_number": enrollment_number,
+                        "graduation_year": graduation_year,
+                        "last_name": random.choice(LAST_NAMES),
+                        "first_name": random.choice(FIRST_NAMES),
+                        "gender": random.choice(["F", "M"]),
+                        "faculty": faculty,
+                        "study_programme": choose_study_programme(faculty),
+                        "degree_level": degree_level,
+                        "generalized_degree_level": generalized_degree_level,
+                        "study_type": choose_study_type(degree_level),
+                        "full_parttime": random.choices(FULL_PARTTIME, weights=[0.85, 0.15], k=1)[0],
+                    }
+                )
+
+    return profiles
+
+
+def build_graduates_dataframe(
+    profiles: list[dict[str, object]],
+    graduation_year: int,
 ) -> pd.DataFrame:
-    rows: list[dict[str, Any]] = []
+    rows = []
 
-    for row_index in range(1, records_per_file + 1):
-        row: dict[str, Any] = {}
+    for profile in profiles:
+        if profile["graduation_year"] != graduation_year:
+            continue
 
-        # Generate in the exact schema order
-        for column, spec in schema.items():
-            row[column] = generate_value(
-                column,
-                spec,
-                row,
-                year=year,
-                file_index=file_index,
-                row_index=row_index,
-            )
-
-        rows.append(row)
-
-    df = pd.DataFrame(rows)
-
-    # Excel-friendly date formatting
-    for date_col in ("date", "graduation_date"):
-        if date_col in df.columns:
-            df[date_col] = pd.to_datetime(df[date_col]).dt.date
-
-    return df
-
-# Main reusable
-
-def generate_yearly_excel_files(
-    schema: dict[str, Any],
-    output_path: str | Path,
-    records_per_file: int,
-    number_of_excel_files: int = 5,
-    base_filename: str | None = None,
-    seed: int | None = 42,
-) -> list[Path]:
-    """
-    Generate yearly Excel files for the last N years.
-
-    Parameters
-    ----------
-    schema:
-        Dictionary of column_name -> generation spec
-    output_path:
-        Folder where Excel files will be created
-    records_per_file:
-        Number of rows in each yearly file
-    number_of_excel_files:
-        Number of yearly files, default 5
-    base_filename:
-        Base file name. If None, uses output folder name.
-    seed:
-        Optional random seed for reproducibility
-
-    Returns
-    -------
-    List of created file paths
-    """
-    if seed is not None:
-        random.seed(seed)
-
-    output_dir = Path(output_path)
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    base = safe_base_filename(output_dir, base_filename)
-    current_year = date.today().year
-    start_year = current_year - number_of_excel_files + 1
-    years = list(range(start_year, current_year + 1))
-
-    created_files: list[Path] = []
-
-    for file_index, year in enumerate(years, start=1):
-        df = generate_records_for_year(
-            schema=schema,
-            records_per_file=records_per_file,
-            year=year,
-            file_index=file_index,
+        rows.append(
+            {
+                "enrollment_number": profile["enrollment_number"],
+                "last_name": profile["last_name"],
+                "first_name": profile["first_name"],
+                "study_type": profile["study_type"],
+                "faculty": profile["faculty"],
+                "graduation_date": random_date_in_year(graduation_year, month_start=6, month_end=9),
+            }
         )
 
-        file_path = output_dir / f"{base}_{year}.xlsx"
+    return pd.DataFrame(rows)
+
+
+def select_mobility_years(graduation_year: int, data_years: list[int]) -> list[int]:
+    earliest_year = max(min(data_years), graduation_year - 4)
+    return [year for year in data_years if earliest_year <= year <= graduation_year]
+
+
+def build_mobility_rows_for_profile(
+    profile: dict[str, object],
+    data_years: list[int],
+    has_mobility: bool,
+) -> list[dict[str, object]]:
+    if not has_mobility:
+        return []
+
+    graduation_year = int(profile["graduation_year"])
+    possible_years = select_mobility_years(graduation_year, data_years)
+    if not possible_years:
+        return []
+
+    event_count = random.choices([1, 2], weights=[0.8, 0.2], k=1)[0]
+    sampled_years = sorted(random.sample(possible_years, k=min(event_count, len(possible_years))))
+
+    rows: list[dict[str, object]] = []
+    for event_year in sampled_years:
+        country = random.choice(COUNTRIES)
+        short_long_term = random.choices(SHORT_LONG_TERM, weights=[0.7, 0.3], k=1)[0]
+        event_date = random_date_in_year(event_year)
+        year_to = event_year
+        if short_long_term == "Long-term" and event_date.month >= 10:
+            year_to = min(event_year + 1, graduation_year)
+
+        rows.append(
+            {
+                "enrollment_number": profile["enrollment_number"],
+                "faculty": profile["faculty"],
+                "last_name": profile["last_name"],
+                "first_name": profile["first_name"],
+                "number": 1,
+                "gender": profile["gender"],
+                "status": "student",
+                "employee_category": "",
+                "mobility_direction": random.choices(["incoming", "outgoing"], weights=[0.15, 0.85], k=1)[0],
+                "mobility_programme": random.choice(MOBILITY_PROGRAMMES),
+                "mobility_type": random.choice(MOBILITY_TYPES),
+                "mobility_form": random.choices(["Summer school", "BIP / KIP", ""], weights=[0.2, 0.25, 0.55], k=1)[0],
+                "country": country,
+                "eu_noneu": is_eu_country(country),
+                "partner_institution": choose_partner_institution(country),
+                "study_programme": profile["study_programme"],
+                "degree_level": profile["degree_level"],
+                "full_parttime": profile["full_parttime"],
+                "academic_year": academic_year_from_calendar_year(event_year),
+                "year_from": event_year,
+                "date": event_date,
+                "short_long_term": short_long_term,
+                "year_to": year_to,
+            }
+        )
+
+    return rows
+
+
+def build_mobility_dataframes(
+    profiles: list[dict[str, object]],
+    data_years: list[int],
+) -> dict[int, pd.DataFrame]:
+    mobility_rows_by_year = {year: [] for year in data_years}
+
+    profiles_by_cohort: dict[tuple[int, str, str], list[dict[str, object]]] = {}
+    for profile in profiles:
+        key = (
+            int(profile["graduation_year"]),
+            str(profile["faculty"]),
+            str(profile["generalized_degree_level"]),
+        )
+        profiles_by_cohort.setdefault(key, []).append(profile)
+
+    for _, cohort_profiles in profiles_by_cohort.items():
+        cohort_student_ids = [str(profile["enrollment_number"]) for profile in cohort_profiles]
+        participant_count = round(len(cohort_student_ids) * MOBILITY_PARTICIPATION_RATE)
+        participant_count = max(1, min(len(cohort_student_ids) - 1, participant_count))
+        participant_ids = set(random.sample(cohort_student_ids, participant_count))
+
+        for profile in cohort_profiles:
+            rows = build_mobility_rows_for_profile(
+                profile,
+                data_years,
+                has_mobility=str(profile["enrollment_number"]) in participant_ids,
+            )
+            for row in rows:
+                mobility_rows_by_year[int(row["year_from"])].append(row)
+
+    return {
+        year: pd.DataFrame(rows)
+        for year, rows in mobility_rows_by_year.items()
+    }
+
+
+def write_yearly_excel_files(
+    yearly_dataframes: dict[int, pd.DataFrame],
+    output_dir: Path,
+    base_filename: str,
+) -> list[Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    created_files: list[Path] = []
+
+    for year, df in sorted(yearly_dataframes.items()):
+        file_path = output_dir / f"{base_filename}_{year}.xlsx"
         df.to_excel(file_path, index=False)
         created_files.append(file_path)
 
     return created_files
 
 
-# Example schemas
+def generate_yearly_excel_files(
+    output_path: str | Path,
+    records_per_file: int,
+    number_of_excel_files: int = 5,
+    base_filename: str | None = None,
+    seed: int | None = 42,
+) -> tuple[list[Path], list[Path]]:
+    if seed is not None:
+        random.seed(seed)
 
-MOBILITY_SCHEMA: dict[str, Any] = {
-    "enrollment_number": {"type": "generated", "generator": "enrollment_number"},
-    "faculty": [
-        "UP FHŠ",
-        "UP FM",
-        "UP FAMNIT",
-        "UP FVZ",
-        "UP PEF",
-        "UP IAM",
-        "UP FTS - TURISTICA",
-    ],
-    "last_name": {"type": "generated", "generator": "last_name"},
-    "first_name": {"type": "generated", "generator": "first_name"},
-    "number": {"type": "constant", "value": 1},
-    "gender": ["F", "M"],
-    "status": {"type": "constant", "value": "student"},
-    "employee_category": {"type": "constant", "value": ""},
-    "mobility_direction": ["incoming", "outgoing"],
-    "mobility_programme": [
-        "Erasmus+ KA131",
-        "Erasmus+ KA171",
-        "Erasmus+ KA2",
-        "CEEPUS",
-        "Interstate agreement",
-        "COST",
-        "ARIS bilateral agreement",
-        "Marie Curie & ARIS scheme",
-        "Freemover",
-        "Inter-university agreement",
-        "Fulbright",
-        "T4EU",
-        "Other projects",
-        "Other",
-    ],
-    "mobility_type": [
-        "Study",
-        "Traineeship",
-        "Teaching",
-        "Training",
-        "Conference",
-        "Meeting",
-        "Research",
-        "Research and teaching",
-        "Other",
-    ],
-    "mobility_form": ["Summer school", "BIP / KIP", ""],
-    "country": [
-        "Slovenia",
-        "Croatia",
-        "Italy",
-        "Austria",
-        "Germany",
-        "Spain",
-        "France",
-        "Ireland",
-        "Poland",
-        "Netherlands",
-        "Serbia",
-        "Switzerland",
-        "USA",
-        "Bosnia and Herzegovina",
-        "Montenegro",
-    ],
-    "eu_noneu": {"type": "generated", "generator": "eu_noneu"},
-    "partner_institution": {"type": "generated", "generator": "partner_institution"},
-    "study_programme": {"type": "generated", "generator": "study_programme"},
-    "degree_level": ["Bachelor", "Master", "PhD"],
-    "full_parttime": ["Full-time", "Part-time"],
-    "academic_year": {"type": "generated", "generator": "academic_year"},
-    "year_from": {"type": "generated", "generator": "year_from"},
-    "date": {"type": "generated", "generator": "date"},
-    "short_long_term": ["Short-term", "Long-term"],
-    "year_to": {"type": "generated", "generator": "year_to"},
-}
+    output_root = Path(output_path)
+    output_root.mkdir(parents=True, exist_ok=True)
 
-GRADUATES_SCHEMA: dict[str, Any] = {
-    "enrollment_number": {"type": "generated", "generator": "enrollment_number"},
-    "last_name": {"type": "generated", "generator": "last_name"},
-    "first_name": {"type": "generated", "generator": "first_name"},
-    "study_type": [
-        "University",
-        "Professional",
-    ],
-    "faculty": [
-        "UP FHŠ",
-        "UP FM",
-        "UP FAMNIT",
-        "UP FVZ",
-        "UP PEF",
-        "UP IAM",
-        "UP FTS - TURISTICA",
-    ],
-    "graduation_date": {"type": "generated", "generator": "graduation_date"},
-}
+    current_year = date.today().year
+    start_year = current_year - number_of_excel_files + 1
+    data_years = list(range(start_year, current_year + 1))
+
+    profiles = build_student_profiles(
+        graduation_years=data_years,
+        graduates_per_year=records_per_file,
+    )
+
+    graduates_output_dir = output_root / "graduates"
+    mobility_output_dir = output_root / "mobility"
+
+    graduates_yearly = {
+        year: build_graduates_dataframe(profiles, year)
+        for year in data_years
+    }
+    mobility_yearly = build_mobility_dataframes(profiles, data_years)
+
+    graduates_files = write_yearly_excel_files(
+        graduates_yearly,
+        graduates_output_dir,
+        base_filename="graduates" if base_filename is None else f"{base_filename}_graduates",
+    )
+    mobility_files = write_yearly_excel_files(
+        mobility_yearly,
+        mobility_output_dir,
+        base_filename="mobility" if base_filename is None else f"{base_filename}_mobility",
+    )
+
+    return mobility_files, graduates_files
 
 
 if __name__ == "__main__":
     base_dir = Path(__file__).resolve().parent
     data_dir = base_dir / "data"
 
-    mobility_dir = data_dir / "mobility"
-    graduates_dir = data_dir / "graduates"
-
-    created_mobility = generate_yearly_excel_files(
-        schema=MOBILITY_SCHEMA,
-        output_path=mobility_dir,
-        records_per_file=200,
-        number_of_excel_files=5,
-        base_filename=None,   # defaults to folder name, so: mobility_YYYY.xlsx
-        seed=42,
-    )
-
-    created_graduates = generate_yearly_excel_files(
-        schema=GRADUATES_SCHEMA,
-        output_path=graduates_dir,
+    created_mobility, created_graduates = generate_yearly_excel_files(
+        output_path=data_dir,
         records_per_file=150,
         number_of_excel_files=5,
-        base_filename=None,   # defaults to folder name, so: graduates_YYYY.xlsx
-        seed=99,
+        base_filename=None,
+        seed=42,
     )
 
     print("Created mobility files:")
