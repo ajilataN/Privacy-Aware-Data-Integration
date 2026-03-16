@@ -56,7 +56,7 @@ def clean_graduates_data(df: pd.DataFrame) -> pd.DataFrame:
     # fix type of enrollment number
     df["enrollment_number"] = df["enrollment_number"].astype(str)
 
-    text_columns = ["faculty", "study_type"]
+    text_columns = ["faculty", "study_type", "degree_level"]
 
     for col in text_columns:
         if col in df.columns:
@@ -86,7 +86,6 @@ def aggregate_mobility_per_student(df: pd.DataFrame) -> pd.DataFrame:
             mobility_count=("enrollment_number", "count"),
             first_mobility_year=("mobility_year", "min"),
             last_mobility_year=("mobility_year", "max"),
-            degree_level=("degree_level", "first"),
             eu_noneu=("eu_noneu","first"),
             short_long_term=("short_long_term","first"),
         )

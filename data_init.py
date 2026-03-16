@@ -305,6 +305,7 @@ def build_graduates_dataframe(
                 "first_name": profile["first_name"],
                 "study_type": profile["study_type"],
                 "faculty": profile["faculty"],
+                "degree_level": profile["degree_level"],
                 "graduation_date": random_date_in_year(graduation_year, month_start=6, month_end=9),
             }
         )
