@@ -1,8 +1,7 @@
 from src.loader import load_dataset
 from src.preprocess import clean_mobility_data, clean_graduates_data, aggregate_mobility_per_student
 from src.dataset_integration import integrate_datasets
-from src.anonymization import generalize_degree_level, generalize_faculty, remove_identifiers, compute_equivalence_classes, compute_max_k
-
+from src.anonymization import generalize_degree_level, generalize_faculty, remove_identifiers, compute_equivalence_classes, compute_max_k, compute_l_diversity, compute_t_closeness 
 
 def main():
     mobility_path = "data/mobility"
@@ -37,6 +36,13 @@ def main():
 
     QI = ["faculty", "degree_level", "graduation_year"]
 
+    SENSITIVE_ATTRIBUTES = [
+        "had_mobility",
+        "mobility_count",
+        "eu_noneu",
+        "short_long_term",
+    ]
+
     print("\n Before generalization")
 
     groups = compute_equivalence_classes(anonymization_input, QI)
@@ -59,6 +65,23 @@ def main():
     print("\nMaximum possible k after generalization:", max_k_generalized)
 
     print(groups_generalized.sort_values("group_size").head(10))
+
+
+    for sensitive in SENSITIVE_ATTRIBUTES:
+
+        print(f"\nEvaluating sensitive attribute: {sensitive}")
+
+        l_groups = compute_l_diversity(anonymization_input, QI, sensitive)
+
+        print("L-diversity statistics:")
+        print(l_groups["l_diversity"].describe())
+
+        print("Minimum L-diversity:", l_groups["l_diversity"].min())
+
+        t_groups = compute_t_closeness(anonymization_input, QI, sensitive)
+
+        print("T-closeness statistics:")
+        print(t_groups["t_distance"].describe())
 
 if __name__ == "__main__":
     main()

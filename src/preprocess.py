@@ -87,6 +87,8 @@ def aggregate_mobility_per_student(df: pd.DataFrame) -> pd.DataFrame:
             first_mobility_year=("mobility_year", "min"),
             last_mobility_year=("mobility_year", "max"),
             degree_level=("degree_level", "first"),
+            eu_noneu=("eu_noneu","first"),
+            short_long_term=("short_long_term","first"),
         )
         .reset_index()
     )

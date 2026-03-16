@@ -90,3 +90,44 @@ def generalize_faculty(df: pd.DataFrame) -> pd.DataFrame:
         df["faculty"] = df["faculty"].replace(FACULTY_GENERALIZATION)
 
     return df
+
+def compute_l_diversity(df: pd.DataFrame, quasi_identifiers: list, sensitive_attribute: str):
+    """
+    Computes L-diversity for each equivalence class.
+    L-diversity = number of distinct sensitive values in each group.
+    """
+
+    l_groups = (
+        df.groupby(quasi_identifiers)[sensitive_attribute]
+        .nunique()
+        .reset_index(name="l_diversity")
+        .sort_values("l_diversity")
+    )
+
+    return l_groups
+
+def compute_t_closeness(df: pd.DataFrame, quasi_identifiers: list, sensitive_attribute: str):
+    """
+    Computes T-closeness using the absolute difference between the global distribution and group distribution.
+    """
+
+    global_dist = df[sensitive_attribute].value_counts(normalize=True)
+
+    results = []
+
+    for group_values, group in df.groupby(quasi_identifiers):
+
+        group_dist = group[sensitive_attribute].value_counts(normalize=True)
+        aligned = global_dist.subtract(group_dist, fill_value=0).abs()
+
+        t_distance = aligned.sum()
+
+        if not isinstance(group_values, tuple):
+            group_values = (group_values,)
+
+        results.append((*group_values, t_distance))
+
+    columns = quasi_identifiers + ["t_distance"]
+
+    return pd.DataFrame(results, columns=columns)
+
