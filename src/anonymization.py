@@ -19,16 +19,14 @@ DEGREE_LEVEL_GENERALIZATION = {
 }
 
 FACULTY_GENERALIZATION = {
-    "UP FHŠ": "Social Sciences",
-    "UP FM": "Social Sciences",
+    "UP FHŠ": "Society & Culture",
+    "UP FM": "Business & Economics",
     "UP FAMNIT": "STEM",
-    "UP FVZ": "Health",
-    "UP PEF": "Education",
-    "UP IAM": "Arts",
-    "UP FTS - TURISTICA": "Tourism",
+    "UP FVZ": "Health Sciences",
+    "UP PEF": "Society & Culture",
+    "UP IAM": "STEM",
+    "UP FTS - TURISTICA": "Business & Economics",
 }
-
-FACULTY_GENERALIZATION["UP FHS"] = "Social Sciences"
 
 def remove_identifiers(df: pd.DataFrame) -> pd.DataFrame:
     """

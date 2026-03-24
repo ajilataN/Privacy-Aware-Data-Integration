@@ -69,7 +69,7 @@ def main():
     generalized_df = generalize_faculty(generalized_df)
     anonymized_df = suppress_small_equivalence_classes(generalized_df, QI, min_k=target_k)
 
-    anonymized_df.to_excel("output/anonymized_dataset.xlsx", index=False)
+    anonymized_df.to_excel("output/anonymized/anonymized_dataset.xlsx", index=False)
 
     print("\n After generalization")
 
@@ -98,7 +98,7 @@ def main():
     report_df["mobility_share"] = (
         report_df["graduates_with_mobility"] / report_df["graduates"]
     ).round(3)
-    report_df.to_excel("output/mobility_report_summary.xlsx", index=False)
+    report_df.to_excel("output/reports/mobility_report_summary.xlsx", index=False)
 
 
     for sensitive in SENSITIVE_ATTRIBUTES:

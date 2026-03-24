@@ -7,7 +7,11 @@ def list_excel_files(folder_path: str):
     Returns all Excel files in the given folder.
     """
     folder = Path(folder_path)
-    return sorted(folder.glob("*.xlsx"))
+    return sorted(
+        file_path
+        for file_path in folder.glob("*.xlsx")
+        if not file_path.name.startswith("~$")
+    )
 
 
 def extract_year_from_filename(file_path: Path):

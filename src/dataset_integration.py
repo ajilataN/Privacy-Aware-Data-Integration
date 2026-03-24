@@ -38,8 +38,4 @@ def integrate_datasets(
     if "mobility_count" in merged_df.columns:
         merged_df["mobility_count_bucket"] = merged_df["mobility_count"].apply(bucket_mobility_count)
 
-    for col in ["first_mobility_year", "last_mobility_year"]:
-        if col in merged_df.columns:
-            merged_df[col] = merged_df[col]
-
     return merged_df
