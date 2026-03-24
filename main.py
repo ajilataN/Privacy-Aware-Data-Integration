@@ -1,3 +1,5 @@
+import pandas as pd
+
 from src.loader import load_dataset
 from src.preprocess import clean_mobility_data, clean_graduates_data, aggregate_mobility_per_student
 from src.dataset_integration import integrate_datasets
@@ -98,7 +100,23 @@ def main():
     report_df["mobility_share"] = (
         report_df["graduates_with_mobility"] / report_df["graduates"]
     ).round(3)
-    report_df.to_excel("output/reports/mobility_report_summary.xlsx", index=False)
+
+    faculty_report_df = (
+        anonymized_df.groupby("faculty")
+        .agg(
+            graduates=("had_mobility", "size"),
+            graduates_with_mobility=("had_mobility", "sum"),
+        )
+        .reset_index()
+        .sort_values("faculty")
+    )
+    faculty_report_df["mobility_share"] = (
+        faculty_report_df["graduates_with_mobility"] / faculty_report_df["graduates"]
+    ).round(3)
+
+    with pd.ExcelWriter("output/reports/mobility_report_summary.xlsx") as writer:
+        report_df.to_excel(writer, sheet_name="By Year", index=False)
+        faculty_report_df.to_excel(writer, sheet_name="By Faculty", index=False)
 
 
     for sensitive in SENSITIVE_ATTRIBUTES:
