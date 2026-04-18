@@ -1,0 +1,38 @@
+{
+  "rows_before_suppression": 750,
+  "rows_after_suppression": 750,
+  "equivalence_class_count": 40,
+  "max_k_before_suppression": 11,
+  "quasi_identifiers": [
+    "faculty",
+    "degree_level",
+    "graduation_year"
+  ],
+  "target_k": 3,
+  "sensitive_attributes": {
+    "had_mobility": {
+      "min_l_diversity": 2,
+      "mean_l_diversity": 2.0,
+      "max_t_distance": 0.014545454545454639,
+      "mean_t_distance": 0.012987012987012991
+    },
+    "mobility_count_bucket": {
+      "min_l_diversity": 2,
+      "mean_l_diversity": 2.5,
+      "max_t_distance": 0.29551515151515156,
+      "mean_t_distance": 0.09404761904761905
+    },
+    "eu_noneu": {
+      "min_l_diversity": 2,
+      "mean_l_diversity": 2.825,
+      "max_t_distance": 0.36,
+      "mean_t_distance": 0.11592640692640692
+    },
+    "short_long_term": {
+      "min_l_diversity": 2,
+      "mean_l_diversity": 2.775,
+      "max_t_distance": 0.40266666666666673,
+      "mean_t_distance": 0.11345541125541125
+    }
+  }
+}

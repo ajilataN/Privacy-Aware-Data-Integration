@@ -1,0 +1,147 @@
+{
+  "workflow_version": 1,
+  "datasets": {
+    "graduates_path": "data/graduates",
+    "mobility_path": "data/mobility"
+  },
+  "join": {
+    "student_id_column": "enrollment_number",
+    "join_type": "left",
+    "left_dataset": "graduates",
+    "right_dataset": "mobility"
+  },
+  "mobility_aggregation": {
+    "mobility_record_count": {
+      "selected": "count",
+      "source_column": "enrollment_number",
+      "allowed": [
+        "count"
+      ],
+      "keep_after_merge": true
+    },
+    "eu_noneu": {
+      "selected": "first",
+      "allowed": [
+        "first",
+        "mode",
+        "nunique",
+        "count"
+      ],
+      "keep_after_merge": true
+    },
+    "short_long_term": {
+      "selected": "first",
+      "allowed": [
+        "first",
+        "mode",
+        "nunique",
+        "count"
+      ],
+      "keep_after_merge": true
+    }
+  },
+  "transformations": {
+    "graduation_year": {
+      "operation": "extract_year",
+      "source_column": "graduation_date"
+    },
+    "mobility_count_bucket": {
+      "operation": "bucket_numeric",
+      "source_column": "mobility_record_count",
+      "fillna_value": 0,
+      "bins": [
+        {
+          "label": "0",
+          "min": 0,
+          "max": 0
+        },
+        {
+          "label": "1",
+          "min": 1,
+          "max": 1
+        },
+        {
+          "label": "2+",
+          "min": 2
+        }
+      ]
+    },
+    "had_mobility": {
+      "operation": "derive_boolean_from_numeric",
+      "source_column": "mobility_record_count",
+      "fillna_value": 0,
+      "threshold": 0,
+      "true_value": 1,
+      "false_value": 0
+    },
+    "eu_noneu": {
+      "operation": "fill_missing_literal",
+      "source_column": "eu_noneu",
+      "value": "No mobility"
+    },
+    "short_long_term": {
+      "operation": "fill_missing_literal",
+      "source_column": "short_long_term",
+      "value": "No mobility"
+    }
+  },
+  "selection": {
+    "direct_identifiers": [
+      "enrollment_number",
+      "last_name",
+      "first_name"
+    ],
+    "drop_columns": [
+      "source_file"
+    ],
+    "quasi_identifiers": [
+      "faculty",
+      "degree_level",
+      "graduation_year"
+    ],
+    "sensitive_attributes": [
+      "had_mobility",
+      "mobility_count_bucket",
+      "eu_noneu",
+      "short_long_term"
+    ],
+    "report_columns": [
+      "graduation_year",
+      "faculty",
+      "had_mobility",
+      "mobility_record_count",
+      "mobility_count_bucket"
+    ]
+  },
+  "generalizations": {
+    "degree_level": {
+      "Bachelor": "Undergraduate",
+      "Master": "Graduate",
+      "PhD": "Graduate"
+    },
+    "faculty": {
+      "UP FHS": "Society & Culture",
+      "UP FM": "Business & Economics",
+      "UP FAMNIT": "STEM",
+      "UP FVZ": "Health Sciences",
+      "UP PEF": "Society & Culture",
+      "UP IAM": "STEM",
+      "UP FTS - TURISTICA": "Business & Economics"
+    }
+  },
+  "privacy_targets": {
+    "target_k": 3,
+    "sensitive_attributes_for_checks": [
+      "had_mobility",
+      "mobility_count_bucket",
+      "eu_noneu",
+      "short_long_term"
+    ]
+  },
+  "outputs": {
+    "merged_dataset_path": "output/configurable/merged_dataset.xlsx",
+    "anonymized_dataset_path": "output/configurable/anonymized_dataset.xlsx",
+    "privacy_metrics_path": "output/configurable/privacy_metrics.json",
+    "refinement_path": "output/configurable/refinement_iteration.json"
+  }
+}

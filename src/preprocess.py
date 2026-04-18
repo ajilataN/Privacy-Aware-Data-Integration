@@ -12,6 +12,7 @@ def clean_mobility_data(df: pd.DataFrame) -> pd.DataFrame:
     df["enrollment_number"] = df["enrollment_number"].astype(str)
 
     # filter students
+    # might there be some other statuses for professionals 
     if "status" in df.columns:
         df = df[df["status"].str.lower() == "student"]
 
@@ -86,8 +87,8 @@ def aggregate_mobility_per_student(df: pd.DataFrame) -> pd.DataFrame:
             mobility_count=("enrollment_number", "count"),
             first_mobility_year=("mobility_year", "min"),
             last_mobility_year=("mobility_year", "max"),
-            eu_noneu=("eu_noneu","first"),
-            short_long_term=("short_long_term","first"),
+            eu_noneu=("eu_noneu","first"), # can be a boolean
+            short_long_term=("short_long_term","first"), # can be a boolean or 3 values one for short one for long and one for both
         )
         .reset_index()
     )

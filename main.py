@@ -48,6 +48,8 @@ def main():
 
     anonymization_input = remove_identifiers(merged_df)
 
+    # this can be done by an algorithm that analyzes the data and gives you possible qi sets
+    # for all qi sets i can check k
     QI = ["faculty", "degree_level", "graduation_year"]
 
     SENSITIVE_ATTRIBUTES = [
@@ -67,11 +69,13 @@ def main():
 
 
     # Apply generalization
+    # we can add fake data to increase the k for small groups
     generalized_df = generalize_degree_level(anonymization_input)
     generalized_df = generalize_faculty(generalized_df)
     anonymized_df = suppress_small_equivalence_classes(generalized_df, QI, min_k=target_k)
 
     anonymized_df.to_excel("output/anonymized/anonymized_dataset.xlsx", index=False)
+    # remove graduation date
 
     print("\n After generalization")
 
@@ -129,7 +133,7 @@ def main():
         print(l_groups["l_diversity"].describe())
 
         print("Minimum L-diversity:", l_groups["l_diversity"].min())
-
+    
         t_groups = compute_t_closeness(anonymized_df, QI, sensitive)
 
         print("T-closeness statistics:")

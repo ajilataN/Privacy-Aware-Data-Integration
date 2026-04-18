@@ -2,6 +2,25 @@ from pathlib import Path
 import pandas as pd
 
 
+def list_tabular_files(path_like: str | Path):
+    """
+    Returns supported tabular files from a file or folder path.
+    """
+    path = Path(path_like)
+    if path.is_file():
+        return [path]
+
+    files = []
+    for pattern in ("*.xlsx", "*.xls", "*.csv"):
+        files.extend(
+            file_path
+            for file_path in path.glob(pattern)
+            if not file_path.name.startswith("~$")
+        )
+
+    return sorted(files)
+
+
 def list_excel_files(folder_path: str):
     """
     Returns all Excel files in the given folder.
@@ -72,3 +91,29 @@ def load_dataset(folder_path, years_to_include=1, target_year=None):
     # print(f"Loaded dataset shape: {df.shape}")
 
     return df
+
+
+def load_any_dataset(path_like):
+    """
+    Loads a single CSV/Excel file or all supported files in a folder.
+    """
+    files = list_tabular_files(path_like)
+
+    if not files:
+        raise FileNotFoundError(f"No supported files found at {path_like}")
+
+    dfs = []
+    for file_path in files:
+        suffix = file_path.suffix.lower()
+        if suffix == ".csv":
+            df = pd.read_csv(file_path)
+        else:
+            df = pd.read_excel(file_path)
+
+        df["source_file"] = file_path.name
+        dfs.append(df)
+
+    if not dfs:
+        return pd.DataFrame()
+
+    return pd.concat(dfs, ignore_index=True)

@@ -19,7 +19,8 @@ DEGREE_LEVEL_GENERALIZATION = {
 }
 
 FACULTY_GENERALIZATION = {
-    "UP FHŠ": "Society & Culture",
+    # check the S in fhs
+    "UP FHS": "Society & Culture",
     "UP FM": "Business & Economics",
     "UP FAMNIT": "STEM",
     "UP FVZ": "Health Sciences",
