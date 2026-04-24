@@ -1,0 +1,31 @@
+<mxfile host="app.diagrams.net" agent="Codex" version="24.7.17">
+  <diagram id="graduates-mobility-relationship" name="Graduates vs Mobility">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Raw Dataset Relationship" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=20;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="20" width="360" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="graduates" value="Graduates Dataset&#xa;&#xa;PK / join key: enrollment_number&#xa;faculty&#xa;degree_level&#xa;graduation_date&#xa;..." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;align=left;spacingLeft=12;spacingTop=10;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="120" y="170" width="250" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="mobility" value="Mobility Dataset&#xa;&#xa;FK / join key: enrollment_number&#xa;mobility_programme&#xa;mobility_type&#xa;country&#xa;..." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;align=left;spacingLeft=12;spacingTop=10;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="680" y="170" width="250" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="relationship" value="matched by enrollment_number" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#666666;endArrow=none;startArrow=none;fontSize=13;backgroundOutline=1;" edge="1" parent="1" source="graduates" target="mobility">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cardinality-left" value="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=18;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="235" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="cardinality-right" value="0..n" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=18;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="610" y="235" width="50" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="note" value="Interpretation: one graduate can have zero, one, or many mobility records.&#xa;The pipeline aggregates mobility to one row per student before merging." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;align=left;spacingLeft=10;spacingTop=8;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="260" y="420" width="520" height="80" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
