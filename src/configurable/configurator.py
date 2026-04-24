@@ -12,46 +12,26 @@ from src.anonymization import (
 from src.configurable.models import PipelineOutputs
 from src.configurable.refinement import build_refinement_payload
 from src.configurable.transformations import (
+    apply_configured_semantic_types,
     apply_generalizations,
-    apply_mobility_aggregation,
     apply_transformations,
-    normalize_id_column,
 )
 from src.loader import load_any_dataset
 
 
 def run_configured_pipeline(config: dict[str, Any]) -> PipelineOutputs:
-    graduates_df = load_any_dataset(config["datasets"]["graduates_path"])
-    mobility_df = load_any_dataset(config["datasets"]["mobility_path"])
+    prepared_dataset_config = config.get("prepared_dataset", {})
+    prepared_dataset_path = prepared_dataset_config.get("path")
+    if not prepared_dataset_path:
+        raise ValueError("Config must define prepared_dataset.path.")
 
-    join_key = config["join"]["student_id_column"]
-    if not join_key:
-        raise ValueError("Config must define join.student_id_column")
-
-    graduates_df = normalize_id_column(graduates_df, join_key)
-    mobility_df = normalize_id_column(mobility_df, join_key)
-
-    aggregated_mobility_df = apply_mobility_aggregation(
-        mobility_df,
-        join_key=join_key,
-        aggregation_config=config.get("mobility_aggregation", {}),
-    )
-
-    merged_df = graduates_df.merge(
-        aggregated_mobility_df,
-        on=join_key,
-        how=config["join"].get("join_type", "left"),
-    )
-
-    transformed_df = apply_transformations(merged_df, config.get("transformations", {}))
+    prepared_df = load_any_dataset(prepared_dataset_path)
+    prepared_df = apply_configured_semantic_types(prepared_df, config.get("columns"))
+    transformed_df = apply_transformations(prepared_df, config.get("transformations", {}))
     transformed_df = apply_generalizations(transformed_df, config.get("generalizations", {}))
 
     selection = config.get("selection", {})
-    removable_columns = list(
-        dict.fromkeys(
-            selection.get("direct_identifiers", []) + selection.get("drop_columns", [])
-        )
-    )
+    removable_columns = selection.get("drop_columns", [])
     anonymization_input = transformed_df.drop(
         columns=[column for column in removable_columns if column in transformed_df.columns],
         errors="ignore",
@@ -98,7 +78,6 @@ def run_configured_pipeline(config: dict[str, Any]) -> PipelineOutputs:
     privacy_metrics["sensitive_attributes"] = sensitive_metrics
 
     return PipelineOutputs(
-        merged_df=merged_df,
         anonymized_df=anonymized_df,
         privacy_metrics=privacy_metrics,
         refinement_payload=build_refinement_payload(

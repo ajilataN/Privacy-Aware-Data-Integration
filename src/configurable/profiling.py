@@ -52,57 +52,59 @@ def infer_semantic_type(series: pd.Series) -> str:
     return "categorical"
 
 
-def possible_user_values_for_type() -> list[str]:
+def possible_semantic_types() -> list[str]:
     return [
-        "identifier",
-        "direct_identifier",
-        "quasi_identifier",
-        "sensitive_attribute",
         "categorical",
         "numeric",
         "datetime",
         "boolean",
         "free_text",
-        "technical",
-        "drop",
+        "identifier_like",
+        "unknown",
     ]
 
 
-def sample_values(series: pd.Series, limit: int = 10) -> list[Any]:
-    return series.dropna().astype(str).value_counts().head(limit).index.tolist()
+def sample_values(series: pd.Series, unique_count: int) -> list[Any]:
+    cleaned = (
+        series.dropna()
+        .astype(str)
+        .str.strip()
+    )
+    cleaned = cleaned[cleaned != ""].drop_duplicates()
+
+    if unique_count < 20:
+        return cleaned.tolist()
+
+    return cleaned.head(5).tolist()
 
 
 def profile_column(df: pd.DataFrame, column_name: str) -> dict[str, Any]:
     series = df[column_name]
     non_null = series.dropna()
+    semantic_type = infer_semantic_type(series)
+    unique_count = int(non_null.nunique(dropna=True))
 
     return {
         "name": column_name,
-        "inferred_type": infer_semantic_type(series),
-        "nullable": bool(series.isna().any()),
+        "semantic_type": semantic_type,
+        "possible_semantic_types": possible_semantic_types(),
         "non_null_count": int(non_null.shape[0]),
-        "unique_count": int(non_null.nunique(dropna=True)),
-        "sample_values": sample_values(series),
-        "allowed_type_values": possible_user_values_for_type(),
-        "suggested_role": "direct_identifier" if "id" in column_name.lower() else "keep",
+        "unique_count": unique_count,
+        "sample_values": sample_values(series, unique_count),
     }
 
 
 def suggest_join_key(
     graduates_df: pd.DataFrame,
     mobility_df: pd.DataFrame,
-    explicit_key: str | None,
-) -> str | None:
-    if explicit_key:
-        return explicit_key
-
+) -> tuple[str | None, str | None]:
     graduate_columns = {column.lower(): column for column in graduates_df.columns}
     mobility_columns = {column.lower(): column for column in mobility_df.columns}
 
     # Prefer obvious shared identifier names first.
     for candidate in ("student_id", "enrollment_number", "studentid", "id"):
         if candidate in graduate_columns and candidate in mobility_columns:
-            return graduate_columns[candidate]
+            return graduate_columns[candidate], mobility_columns[candidate]
 
     shared_columns = [
         graduate_columns[column_name]
@@ -110,7 +112,8 @@ def suggest_join_key(
         if column_name in mobility_columns and column_name not in {"source_file", "source_year"}
     ]
     if shared_columns:
-        return shared_columns[0]
+        shared_column = shared_columns[0]
+        return shared_column, shared_column
 
     def sampled_value_lengths(df: pd.DataFrame, column_name: str, sample_size: int = 10) -> list[int]:
         non_null = df[column_name].dropna().astype(str).str.strip()
@@ -122,7 +125,7 @@ def suggest_join_key(
         sampled = non_empty.sample(n=sample_count, random_state=42) if len(non_empty) > sample_count else non_empty
         return sampled.str.len().tolist()
 
-    best_match: tuple[str, float] | None = None
+    best_match: tuple[str, str, float] | None = None
 
     for graduate_column in graduates_df.columns:
         if graduate_column in {"source_file", "source_year"}:
@@ -165,13 +168,13 @@ def suggest_join_key(
                 continue
 
             candidate_score = similarity_score - (average_difference * 0.1)
-            if best_match is None or candidate_score > best_match[1]:
-                best_match = (graduate_column, candidate_score)
+            if best_match is None or candidate_score > best_match[2]:
+                best_match = (graduate_column, mobility_column, candidate_score)
 
     if best_match is not None:
-        return best_match[0]
+        return best_match[0], best_match[1]
 
-    return None
+    return None, None
 
 
 def suggest_aggregations(df: pd.DataFrame, join_key: str | None) -> dict[str, dict[str, Any]]:
@@ -182,6 +185,7 @@ def suggest_aggregations(df: pd.DataFrame, join_key: str | None) -> dict[str, di
             continue
 
         inferred_type = infer_semantic_type(df[column])
+        unique_count = int(df[column].dropna().nunique(dropna=True))
         allowed = ["first"]
         selected = "first"
 
@@ -196,6 +200,8 @@ def suggest_aggregations(df: pd.DataFrame, join_key: str | None) -> dict[str, di
         suggestions[column] = {
             "selected": selected,
             "allowed": allowed,
+            "filter": [],
+            "available_filter_values": sample_values(df[column], unique_count),
             "keep_after_merge": False,
         }
 
@@ -302,3 +308,27 @@ def suggest_qi_candidates(df: pd.DataFrame, join_key: str | None) -> list[list[s
     )
 
     return [columns for _, _, _, _, _, columns in ranked_combinations[:10]]
+
+
+def suggest_generalization_candidates(df: pd.DataFrame) -> dict[str, list[Any]]:
+    suggestions: dict[str, list[Any]] = {}
+
+    for column in df.columns:
+        series = df[column]
+        inferred_type = infer_semantic_type(series)
+        unique_count = int(series.dropna().nunique(dropna=True))
+
+        if inferred_type not in {"categorical", "boolean", "datetime"}:
+            continue
+        if not (1 < unique_count <= 50):
+            continue
+
+        cleaned = (
+            series.dropna()
+            .astype(str)
+            .str.strip()
+        )
+        cleaned = cleaned[cleaned != ""].drop_duplicates()
+        suggestions[column] = cleaned.tolist()
+
+    return suggestions

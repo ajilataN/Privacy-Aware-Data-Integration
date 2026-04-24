@@ -7,8 +7,16 @@ import pandas as pd
 
 
 @dataclass
-class PipelineOutputs:
-    merged_df: pd.DataFrame
+class PreparationOutputs:
+    prepared_df: pd.DataFrame
+    anonymization_config: dict[str, Any]
+
+
+@dataclass
+class AnonymizationOutputs:
     anonymized_df: pd.DataFrame
     privacy_metrics: dict[str, Any]
     refinement_payload: dict[str, Any]
+
+
+PipelineOutputs = AnonymizationOutputs

@@ -1,16 +1,1182 @@
 {
-  "workflow_version": 1,
+  "workflow_version": 2,
+  "workflow_stage": "preparation",
+  "instructions": {
+    "how_to_use": [
+      "Review the raw columns first so you understand the graduates and mobility datasets before preparing the merged dataset.",
+      "If a detected semantic_type is wrong, replace it with one value from possible_semantic_types. The configurable pipeline will coerce the column to that semantic type during execution.",
+      "Choose mobility aggregation rules, filters, post-merge missing-value fills, and any preparation transformations that should exist before anonymization suggestions are generated.",
+      "Use prepared_dataset.drop_columns to remove columns from the merged dataset, including direct identifiers you do not want to carry into the anonymization stage.",
+      "Run the preparation stage with the edited JSON file. It will write the prepared merged dataset and a second JSON config for the anonymization stage."
+    ],
+    "allowed_semantic_types": [
+      "categorical",
+      "numeric",
+      "datetime",
+      "boolean",
+      "free_text",
+      "identifier_like",
+      "unknown"
+    ],
+    "allowed_aggregation_values": [
+      "count",
+      "first",
+      "last",
+      "max",
+      "mean",
+      "min",
+      "mode",
+      "nunique",
+      "sum"
+    ],
+    "sections": {
+      "datasets": [
+        "Set the input paths for the graduates and mobility datasets."
+      ],
+      "join": [
+        "Confirm which column in the graduates dataset links to which column in the mobility dataset.",
+        "Use left_on for the graduates key column and right_on for the mobility key column. They may have different names.",
+        "The join is many-to-one: mobility will be aggregated to student level before merge."
+      ],
+      "columns": [
+        "Use this section to explore each column.",
+        "semantic_type is the detected semantic type for the column.",
+        "If needed, replace semantic_type with one of the values listed in possible_semantic_types.",
+        "sample_values shows all distinct values when unique_count is below 20; otherwise it shows five example values to help you understand the column."
+      ],
+      "mobility_aggregation": [
+        "Choose how columns from the mobility dataset should be aggregated to one row per student before the merge.",
+        "Each aggregation entry can also define a filter. Use a single value or a list of values to keep only mobility rows matching that column before aggregation.",
+        "Example: set mobility_aggregation.status.filter to [\"student\"] if only student-status mobility rows should be included in the aggregated mobility dataset."
+      ],
+      "prepared_dataset": [
+        "Use drop_columns to remove columns from the merged dataset before the anonymization stage. This is where you can drop direct identifiers.",
+        "Use post_merge_missing_values to fill columns that become missing for students without mobility after the left join.",
+        "Use transformations to create prepared-dataset columns, such as graduation_year, before anonymization suggestions are generated."
+      ],
+      "outputs": [
+        "Set where the prepared merged dataset and the anonymization-stage config should be written."
+      ]
+    }
+  },
   "datasets": {
     "graduates_path": "data/graduates",
     "mobility_path": "data/mobility"
   },
   "join": {
-    "student_id_column": "enrollment_number",
+    "left_on": "enrollment_number",
+    "right_on": "enrollment_number",
     "join_type": "left",
     "left_dataset": "graduates",
-    "right_dataset": "mobility"
+    "right_dataset": "mobility",
+    "many_to_one_note": "Graduates are treated as one row per student. Mobility is aggregated to student level before merge."
+  },
+  "columns": {
+    "graduates": [
+      {
+        "name": "enrollment_number",
+        "semantic_type": "identifier_like",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 750,
+        "unique_count": 750,
+        "sample_values": [
+          "S202200001",
+          "S202200002",
+          "S202200003",
+          "S202200004",
+          "S202200005"
+        ]
+      },
+      {
+        "name": "last_name",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 750,
+        "unique_count": 20,
+        "sample_values": [
+          "Zupan",
+          "Bozic",
+          "Kastelic",
+          "Novak",
+          "Smit"
+        ]
+      },
+      {
+        "name": "first_name",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 750,
+        "unique_count": 20,
+        "sample_values": [
+          "Ana",
+          "Sara",
+          "Aljaz",
+          "Miha",
+          "Jan"
+        ]
+      },
+      {
+        "name": "study_type",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 750,
+        "unique_count": 2,
+        "sample_values": [
+          "University",
+          "Professional"
+        ]
+      },
+      {
+        "name": "faculty",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 750,
+        "unique_count": 7,
+        "sample_values": [
+          "UP FHS",
+          "UP FM",
+          "UP FAMNIT",
+          "UP FVZ",
+          "UP PEF",
+          "UP IAM",
+          "UP FTS - TURISTICA"
+        ]
+      },
+      {
+        "name": "degree_level",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 750,
+        "unique_count": 3,
+        "sample_values": [
+          "Bachelor",
+          "Master",
+          "PhD"
+        ]
+      },
+      {
+        "name": "graduation_date",
+        "semantic_type": "datetime",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 750,
+        "unique_count": 426,
+        "sample_values": [
+          "2022-08-12",
+          "2022-08-08",
+          "2022-07-15",
+          "2022-09-19",
+          "2022-06-09"
+        ]
+      },
+      {
+        "name": "source_file",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 750,
+        "unique_count": 5,
+        "sample_values": [
+          "graduates_2022.xlsx",
+          "graduates_2023.xlsx",
+          "graduates_2024.xlsx",
+          "graduates_2025.xlsx",
+          "graduates_2026.xlsx"
+        ]
+      }
+    ],
+    "mobility": [
+      {
+        "name": "enrollment_number",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 241,
+        "unique_count": 210,
+        "sample_values": [
+          "S202200002",
+          "S202200003",
+          "S202200007",
+          "S202200016",
+          "S202200019"
+        ]
+      },
+      {
+        "name": "faculty",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 241,
+        "unique_count": 7,
+        "sample_values": [
+          "UP FHS",
+          "UP FM",
+          "UP FAMNIT",
+          "UP FVZ",
+          "UP PEF",
+          "UP IAM",
+          "UP FTS - TURISTICA"
+        ]
+      },
+      {
+        "name": "last_name",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 241,
+        "unique_count": 20,
+        "sample_values": [
+          "Bozic",
+          "Kastelic",
+          "Golob",
+          "Turk",
+          "Potocnik"
+        ]
+      },
+      {
+        "name": "first_name",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 241,
+        "unique_count": 20,
+        "sample_values": [
+          "Sara",
+          "Aljaz",
+          "Eva",
+          "Nika",
+          "Jan"
+        ]
+      },
+      {
+        "name": "number",
+        "semantic_type": "numeric",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 241,
+        "unique_count": 1,
+        "sample_values": [
+          "1"
+        ]
+      },
+      {
+        "name": "gender",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 241,
+        "unique_count": 2,
+        "sample_values": [
+          "M",
+          "F"
+        ]
+      },
+      {
+        "name": "status",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 241,
+        "unique_count": 1,
+        "sample_values": [
+          "student"
+        ]
+      },
+      {
+        "name": "employee_category",
+        "semantic_type": "unknown",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 0,
+        "unique_count": 0,
+        "sample_values": []
+      },
+      {
+        "name": "mobility_direction",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 241,
+        "unique_count": 2,
+        "sample_values": [
+          "outgoing",
+          "incoming"
+        ]
+      },
+      {
+        "name": "mobility_programme",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 241,
+        "unique_count": 14,
+        "sample_values": [
+          "Marie Curie & ARIS scheme",
+          "Interstate agreement",
+          "T4EU",
+          "Erasmus+ KA171",
+          "Inter-university agreement",
+          "Erasmus+ KA2",
+          "Other",
+          "Erasmus+ KA131",
+          "Fulbright",
+          "Freemover",
+          "ARIS bilateral agreement",
+          "CEEPUS",
+          "COST",
+          "Other projects"
+        ]
+      },
+      {
+        "name": "mobility_type",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 241,
+        "unique_count": 9,
+        "sample_values": [
+          "Research",
+          "Traineeship",
+          "Other",
+          "Meeting",
+          "Conference",
+          "Teaching",
+          "Study",
+          "Training",
+          "Research and teaching"
+        ]
+      },
+      {
+        "name": "mobility_form",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 119,
+        "unique_count": 2,
+        "sample_values": [
+          "BIP / KIP",
+          "Summer school"
+        ]
+      },
+      {
+        "name": "country",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 241,
+        "unique_count": 15,
+        "sample_values": [
+          "Netherlands",
+          "Austria",
+          "Poland",
+          "Switzerland",
+          "USA",
+          "Germany",
+          "Ireland",
+          "Bosnia and Herzegovina",
+          "Spain",
+          "Croatia",
+          "France",
+          "Serbia",
+          "Slovenia",
+          "Montenegro",
+          "Italy"
+        ]
+      },
+      {
+        "name": "eu_noneu",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 241,
+        "unique_count": 2,
+        "sample_values": [
+          "EU-27",
+          "Non-EU"
+        ]
+      },
+      {
+        "name": "partner_institution",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 241,
+        "unique_count": 42,
+        "sample_values": [
+          "University of Amsterdam",
+          "Utrecht University",
+          "Graz University of Technology",
+          "Jagiellonian University",
+          "University of Geneva"
+        ]
+      },
+      {
+        "name": "study_programme",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 241,
+        "unique_count": 22,
+        "sample_values": [
+          "Psychology",
+          "Media Studies",
+          "Geography",
+          "Sociology",
+          "Finance"
+        ]
+      },
+      {
+        "name": "degree_level",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 241,
+        "unique_count": 3,
+        "sample_values": [
+          "Bachelor",
+          "PhD",
+          "Master"
+        ]
+      },
+      {
+        "name": "full_parttime",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 241,
+        "unique_count": 2,
+        "sample_values": [
+          "Full-time",
+          "Part-time"
+        ]
+      },
+      {
+        "name": "academic_year",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 241,
+        "unique_count": 5,
+        "sample_values": [
+          "2021/2022",
+          "2022/2023",
+          "2023/2024",
+          "2024/2025",
+          "2025/2026"
+        ]
+      },
+      {
+        "name": "year_from",
+        "semantic_type": "numeric",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 241,
+        "unique_count": 5,
+        "sample_values": [
+          "2022",
+          "2023",
+          "2024",
+          "2025",
+          "2026"
+        ]
+      },
+      {
+        "name": "date",
+        "semantic_type": "datetime",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 241,
+        "unique_count": 212,
+        "sample_values": [
+          "2022-09-14",
+          "2022-12-08",
+          "2022-06-04",
+          "2022-12-22",
+          "2022-08-15"
+        ]
+      },
+      {
+        "name": "short_long_term",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 241,
+        "unique_count": 2,
+        "sample_values": [
+          "Short-term",
+          "Long-term"
+        ]
+      },
+      {
+        "name": "year_to",
+        "semantic_type": "numeric",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 241,
+        "unique_count": 5,
+        "sample_values": [
+          "2022",
+          "2023",
+          "2024",
+          "2025",
+          "2026"
+        ]
+      },
+      {
+        "name": "source_file",
+        "semantic_type": "categorical",
+        "possible_semantic_types": [
+          "categorical",
+          "numeric",
+          "datetime",
+          "boolean",
+          "free_text",
+          "identifier_like",
+          "unknown"
+        ],
+        "non_null_count": 241,
+        "unique_count": 5,
+        "sample_values": [
+          "mobility_2022.xlsx",
+          "mobility_2023.xlsx",
+          "mobility_2024.xlsx",
+          "mobility_2025.xlsx",
+          "mobility_2026.xlsx"
+        ]
+      }
+    ]
   },
   "mobility_aggregation": {
+    "faculty": {
+      "selected": "first",
+      "allowed": [
+        "first",
+        "mode",
+        "nunique",
+        "count"
+      ],
+      "filter": [],
+      "available_filter_values": [
+        "UP FHS",
+        "UP FM",
+        "UP FAMNIT",
+        "UP FVZ",
+        "UP PEF",
+        "UP IAM",
+        "UP FTS - TURISTICA"
+      ],
+      "keep_after_merge": false
+    },
+    "last_name": {
+      "selected": "first",
+      "allowed": [
+        "first",
+        "mode",
+        "nunique",
+        "count"
+      ],
+      "filter": [],
+      "available_filter_values": [
+        "Bozic",
+        "Kastelic",
+        "Golob",
+        "Turk",
+        "Potocnik"
+      ],
+      "keep_after_merge": false
+    },
+    "first_name": {
+      "selected": "first",
+      "allowed": [
+        "first",
+        "mode",
+        "nunique",
+        "count"
+      ],
+      "filter": [],
+      "available_filter_values": [
+        "Sara",
+        "Aljaz",
+        "Eva",
+        "Nika",
+        "Jan"
+      ],
+      "keep_after_merge": false
+    },
+    "number": {
+      "selected": "first",
+      "allowed": [
+        "first",
+        "min",
+        "max",
+        "mean",
+        "sum",
+        "count"
+      ],
+      "filter": [],
+      "available_filter_values": [
+        "1"
+      ],
+      "keep_after_merge": false
+    },
+    "gender": {
+      "selected": "first",
+      "allowed": [
+        "first",
+        "mode",
+        "nunique",
+        "count"
+      ],
+      "filter": [],
+      "available_filter_values": [
+        "M",
+        "F"
+      ],
+      "keep_after_merge": true
+    },
+    "status": {
+      "selected": "first",
+      "allowed": [
+        "first",
+        "mode",
+        "nunique",
+        "count"
+      ],
+      "filter": [],
+      "available_filter_values": [
+        "student"
+      ],
+      "keep_after_merge": false
+    },
+    "employee_category": {
+      "selected": "first",
+      "allowed": [
+        "first"
+      ],
+      "filter": [],
+      "available_filter_values": [],
+      "keep_after_merge": false
+    },
+    "mobility_direction": {
+      "selected": "first",
+      "allowed": [
+        "first",
+        "mode",
+        "nunique",
+        "count"
+      ],
+      "filter": [],
+      "available_filter_values": [
+        "outgoing",
+        "incoming"
+      ],
+      "keep_after_merge": false
+    },
+    "mobility_programme": {
+      "selected": "first",
+      "allowed": [
+        "first",
+        "mode",
+        "nunique",
+        "count"
+      ],
+      "filter": [],
+      "available_filter_values": [
+        "Marie Curie & ARIS scheme",
+        "Interstate agreement",
+        "T4EU",
+        "Erasmus+ KA171",
+        "Inter-university agreement",
+        "Erasmus+ KA2",
+        "Other",
+        "Erasmus+ KA131",
+        "Fulbright",
+        "Freemover",
+        "ARIS bilateral agreement",
+        "CEEPUS",
+        "COST",
+        "Other projects"
+      ],
+      "keep_after_merge": false
+    },
+    "mobility_type": {
+      "selected": "first",
+      "allowed": [
+        "first",
+        "mode",
+        "nunique",
+        "count"
+      ],
+      "filter": [],
+      "available_filter_values": [
+        "Research",
+        "Traineeship",
+        "Other",
+        "Meeting",
+        "Conference",
+        "Teaching",
+        "Study",
+        "Training",
+        "Research and teaching"
+      ],
+      "keep_after_merge": false
+    },
+    "mobility_form": {
+      "selected": "first",
+      "allowed": [
+        "first",
+        "mode",
+        "nunique",
+        "count"
+      ],
+      "filter": [],
+      "available_filter_values": [
+        "BIP / KIP",
+        "Summer school"
+      ],
+      "keep_after_merge": false
+    },
+    "country": {
+      "selected": "first",
+      "allowed": [
+        "first",
+        "mode",
+        "nunique",
+        "count"
+      ],
+      "filter": [],
+      "available_filter_values": [
+        "Netherlands",
+        "Austria",
+        "Poland",
+        "Switzerland",
+        "USA",
+        "Germany",
+        "Ireland",
+        "Bosnia and Herzegovina",
+        "Spain",
+        "Croatia",
+        "France",
+        "Serbia",
+        "Slovenia",
+        "Montenegro",
+        "Italy"
+      ],
+      "keep_after_merge": false
+    },
+    "eu_noneu": {
+      "selected": "first",
+      "allowed": [
+        "first",
+        "mode",
+        "nunique",
+        "count"
+      ],
+      "filter": [],
+      "available_filter_values": [
+        "EU-27",
+        "Non-EU"
+      ],
+      "keep_after_merge": true
+    },
+    "partner_institution": {
+      "selected": "first",
+      "allowed": [
+        "first",
+        "mode",
+        "nunique",
+        "count"
+      ],
+      "filter": [],
+      "available_filter_values": [
+        "University of Amsterdam",
+        "Utrecht University",
+        "Graz University of Technology",
+        "Jagiellonian University",
+        "University of Geneva"
+      ],
+      "keep_after_merge": false
+    },
+    "study_programme": {
+      "selected": "first",
+      "allowed": [
+        "first",
+        "mode",
+        "nunique",
+        "count"
+      ],
+      "filter": [],
+      "available_filter_values": [
+        "Psychology",
+        "Media Studies",
+        "Geography",
+        "Sociology",
+        "Finance"
+      ],
+      "keep_after_merge": false
+    },
+    "degree_level": {
+      "selected": "first",
+      "allowed": [
+        "first",
+        "mode",
+        "nunique",
+        "count"
+      ],
+      "filter": [],
+      "available_filter_values": [
+        "Bachelor",
+        "PhD",
+        "Master"
+      ],
+      "keep_after_merge": false
+    },
+    "full_parttime": {
+      "selected": "first",
+      "allowed": [
+        "first",
+        "mode",
+        "nunique",
+        "count"
+      ],
+      "filter": [],
+      "available_filter_values": [
+        "Full-time",
+        "Part-time"
+      ],
+      "keep_after_merge": false
+    },
+    "academic_year": {
+      "selected": "first",
+      "allowed": [
+        "first",
+        "mode",
+        "nunique",
+        "count"
+      ],
+      "filter": [],
+      "available_filter_values": [
+        "2021/2022",
+        "2022/2023",
+        "2023/2024",
+        "2024/2025",
+        "2025/2026"
+      ],
+      "keep_after_merge": false
+    },
+    "year_from": {
+      "selected": "first",
+      "allowed": [
+        "first",
+        "min",
+        "max",
+        "mean",
+        "sum",
+        "count"
+      ],
+      "filter": [],
+      "available_filter_values": [
+        "2022",
+        "2023",
+        "2024",
+        "2025",
+        "2026"
+      ],
+      "keep_after_merge": false
+    },
+    "date": {
+      "selected": "min",
+      "allowed": [
+        "first",
+        "min",
+        "max"
+      ],
+      "filter": [],
+      "available_filter_values": [
+        "2022-09-14",
+        "2022-12-08",
+        "2022-06-04",
+        "2022-12-22",
+        "2022-08-15"
+      ],
+      "keep_after_merge": false
+    },
+    "short_long_term": {
+      "selected": "first",
+      "allowed": [
+        "first",
+        "mode",
+        "nunique",
+        "count"
+      ],
+      "filter": [],
+      "available_filter_values": [
+        "Short-term",
+        "Long-term"
+      ],
+      "keep_after_merge": true
+    },
+    "year_to": {
+      "selected": "first",
+      "allowed": [
+        "first",
+        "min",
+        "max",
+        "mean",
+        "sum",
+        "count"
+      ],
+      "filter": [],
+      "available_filter_values": [
+        "2022",
+        "2023",
+        "2024",
+        "2025",
+        "2026"
+      ],
+      "keep_after_merge": false
+    },
+    "source_file": {
+      "selected": "first",
+      "allowed": [
+        "first",
+        "mode",
+        "nunique",
+        "count"
+      ],
+      "filter": [],
+      "available_filter_values": [
+        "mobility_2022.xlsx",
+        "mobility_2023.xlsx",
+        "mobility_2024.xlsx",
+        "mobility_2025.xlsx",
+        "mobility_2026.xlsx"
+      ],
+      "keep_after_merge": false
+    },
     "mobility_record_count": {
       "selected": "count",
       "source_column": "enrollment_number",
@@ -18,130 +1184,57 @@
         "count"
       ],
       "keep_after_merge": true
-    },
-    "eu_noneu": {
-      "selected": "first",
-      "allowed": [
-        "first",
-        "mode",
-        "nunique",
-        "count"
-      ],
-      "keep_after_merge": true
-    },
-    "short_long_term": {
-      "selected": "first",
-      "allowed": [
-        "first",
-        "mode",
-        "nunique",
-        "count"
-      ],
-      "keep_after_merge": true
     }
   },
-  "transformations": {
-    "graduation_year": {
-      "operation": "extract_year",
-      "source_column": "graduation_date"
-    },
-    "mobility_count_bucket": {
-      "operation": "bucket_numeric",
-      "source_column": "mobility_record_count",
-      "fillna_value": 0,
-      "bins": [
-        {
-          "label": "0",
-          "min": 0,
-          "max": 0
-        },
-        {
-          "label": "1",
-          "min": 1,
-          "max": 1
-        },
-        {
-          "label": "2+",
-          "min": 2
-        }
-      ]
-    },
-    "had_mobility": {
-      "operation": "derive_boolean_from_numeric",
-      "source_column": "mobility_record_count",
-      "fillna_value": 0,
-      "threshold": 0,
-      "true_value": 1,
-      "false_value": 0
-    },
-    "eu_noneu": {
-      "operation": "fill_missing_literal",
-      "source_column": "eu_noneu",
-      "value": "No mobility"
-    },
-    "short_long_term": {
-      "operation": "fill_missing_literal",
-      "source_column": "short_long_term",
-      "value": "No mobility"
-    }
-  },
-  "selection": {
-    "direct_identifiers": [
-      "enrollment_number",
-      "last_name",
-      "first_name"
-    ],
+  "prepared_dataset": {
     "drop_columns": [
+      "enrollment_number",
+      "first_name",
+      "last_name",
+      "graduation_date",
       "source_file"
     ],
-    "quasi_identifiers": [
-      "faculty",
-      "degree_level",
-      "graduation_year"
-    ],
-    "sensitive_attributes": [
-      "had_mobility",
-      "mobility_count_bucket",
-      "eu_noneu",
-      "short_long_term"
-    ],
-    "report_columns": [
-      "graduation_year",
-      "faculty",
-      "had_mobility",
-      "mobility_record_count",
-      "mobility_count_bucket"
-    ]
-  },
-  "generalizations": {
-    "degree_level": {
-      "Bachelor": "Undergraduate",
-      "Master": "Graduate",
-      "PhD": "Graduate"
+    "post_merge_missing_values": {
+      "mobility_record_count": 0
     },
-    "faculty": {
-      "UP FHS": "Society & Culture",
-      "UP FM": "Business & Economics",
-      "UP FAMNIT": "STEM",
-      "UP FVZ": "Health Sciences",
-      "UP PEF": "Society & Culture",
-      "UP IAM": "STEM",
-      "UP FTS - TURISTICA": "Business & Economics"
+    "transformations": {
+      "graduation_year": {
+        "operation": "extract_year",
+        "source_column": "graduation_date"
+      },
+      "mobility_count_bucket": {
+        "operation": "bucket_numeric",
+        "source_column": "mobility_record_count",
+        "fillna_value": 0,
+        "bins": [
+          {
+            "label": "0",
+            "min": 0,
+            "max": 0
+          },
+          {
+            "label": "1",
+            "min": 1,
+            "max": 1
+          },
+          {
+            "label": "2+",
+            "min": 2
+          }
+        ]
+      },
+      "had_mobility": {
+        "operation": "derive_boolean_from_numeric",
+        "source_column": "mobility_record_count",
+        "fillna_value": 0,
+        "threshold": 0,
+        "true_value": 1,
+        "false_value": 0
+      }
     }
   },
-  "privacy_targets": {
-    "target_k": 3,
-    "sensitive_attributes_for_checks": [
-      "had_mobility",
-      "mobility_count_bucket",
-      "eu_noneu",
-      "short_long_term"
-    ]
-  },
   "outputs": {
-    "merged_dataset_path": "output/configurable/merged_dataset.xlsx",
-    "anonymized_dataset_path": "output/configurable/anonymized_dataset.xlsx",
-    "privacy_metrics_path": "output/configurable/privacy_metrics.json",
-    "refinement_path": "output/configurable/refinement_iteration.json"
+    "prepared_dataset_path": "output/configurable/prepared_dataset.xlsx",
+    "anonymization_config_path": "output/configurable/anonymization_config.json"
   }
 }

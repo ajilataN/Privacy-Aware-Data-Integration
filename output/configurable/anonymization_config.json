@@ -1,0 +1,407 @@
+{
+  "workflow_version": 2,
+  "workflow_stage": "anonymization",
+  "instructions": {
+    "how_to_use": [
+      "Review the prepared dataset columns. The suggestions in this file are based on the merged dataset after aggregation, missing-value handling, drops, and preparation transformations.",
+      "Choose any additional drop_columns, then select quasi_identifiers and sensitive_attributes for the anonymization run.",
+      "Use suggestions.qi_candidates as starting points and generalization_candidates to see full distinct values for likely generalizable columns.",
+      "Run the anonymization stage with this edited JSON file. If needed, use the refinement output for later iterations."
+    ],
+    "allowed_semantic_types": [
+      "categorical",
+      "numeric",
+      "datetime",
+      "boolean",
+      "free_text",
+      "identifier_like",
+      "unknown"
+    ],
+    "sections": {
+      "prepared_dataset": [
+        "Confirm the path of the prepared merged dataset produced in the preparation stage."
+      ],
+      "columns": [
+        "Use this section to explore the prepared merged dataset.",
+        "semantic_type is the detected semantic type for each prepared column.",
+        "If needed, replace semantic_type with one of the values listed in possible_semantic_types before running anonymization."
+      ],
+      "selection": [
+        "Choose any additional drop_columns, then define quasi_identifiers and sensitive_attributes on the prepared dataset."
+      ],
+      "suggestions": [
+        "qi_candidates are suggested on the prepared dataset, so they are more relevant than raw-dataset suggestions.",
+        "generalization_candidates list distinct values for likely generalizable prepared columns."
+      ],
+      "transformations": [
+        "Optional: define any extra prepared-dataset transformations needed before anonymization."
+      ],
+      "generalizations": [
+        "Add value-mapping rules that generalize prepared columns before privacy checks."
+      ],
+      "privacy_targets": [
+        "Set the target k value and choose which sensitive attributes should be checked for l-diversity and t-closeness."
+      ],
+      "outputs": [
+        "Set where the anonymized dataset, privacy metrics, and refinement files should be written."
+      ]
+    }
+  },
+  "prepared_dataset": {
+    "path": "output/configurable/prepared_dataset.xlsx"
+  },
+  "columns": [
+    {
+      "name": "study_type",
+      "semantic_type": "categorical",
+      "possible_semantic_types": [
+        "categorical",
+        "numeric",
+        "datetime",
+        "boolean",
+        "free_text",
+        "identifier_like",
+        "unknown"
+      ],
+      "non_null_count": 750,
+      "unique_count": 2,
+      "sample_values": [
+        "University",
+        "Professional"
+      ]
+    },
+    {
+      "name": "faculty",
+      "semantic_type": "categorical",
+      "possible_semantic_types": [
+        "categorical",
+        "numeric",
+        "datetime",
+        "boolean",
+        "free_text",
+        "identifier_like",
+        "unknown"
+      ],
+      "non_null_count": 750,
+      "unique_count": 7,
+      "sample_values": [
+        "UP FHS",
+        "UP FM",
+        "UP FAMNIT",
+        "UP FVZ",
+        "UP PEF",
+        "UP IAM",
+        "UP FTS - TURISTICA"
+      ]
+    },
+    {
+      "name": "degree_level",
+      "semantic_type": "categorical",
+      "possible_semantic_types": [
+        "categorical",
+        "numeric",
+        "datetime",
+        "boolean",
+        "free_text",
+        "identifier_like",
+        "unknown"
+      ],
+      "non_null_count": 750,
+      "unique_count": 3,
+      "sample_values": [
+        "Bachelor",
+        "Master",
+        "PhD"
+      ]
+    },
+    {
+      "name": "gender",
+      "semantic_type": "categorical",
+      "possible_semantic_types": [
+        "categorical",
+        "numeric",
+        "datetime",
+        "boolean",
+        "free_text",
+        "identifier_like",
+        "unknown"
+      ],
+      "non_null_count": 210,
+      "unique_count": 2,
+      "sample_values": [
+        "M",
+        "F"
+      ]
+    },
+    {
+      "name": "eu_noneu",
+      "semantic_type": "categorical",
+      "possible_semantic_types": [
+        "categorical",
+        "numeric",
+        "datetime",
+        "boolean",
+        "free_text",
+        "identifier_like",
+        "unknown"
+      ],
+      "non_null_count": 210,
+      "unique_count": 2,
+      "sample_values": [
+        "EU-27",
+        "Non-EU"
+      ]
+    },
+    {
+      "name": "short_long_term",
+      "semantic_type": "categorical",
+      "possible_semantic_types": [
+        "categorical",
+        "numeric",
+        "datetime",
+        "boolean",
+        "free_text",
+        "identifier_like",
+        "unknown"
+      ],
+      "non_null_count": 210,
+      "unique_count": 2,
+      "sample_values": [
+        "Short-term",
+        "Long-term"
+      ]
+    },
+    {
+      "name": "mobility_record_count",
+      "semantic_type": "numeric",
+      "possible_semantic_types": [
+        "categorical",
+        "numeric",
+        "datetime",
+        "boolean",
+        "free_text",
+        "identifier_like",
+        "unknown"
+      ],
+      "non_null_count": 750,
+      "unique_count": 3,
+      "sample_values": [
+        "0.0",
+        "1.0",
+        "2.0"
+      ]
+    },
+    {
+      "name": "graduation_year",
+      "semantic_type": "numeric",
+      "possible_semantic_types": [
+        "categorical",
+        "numeric",
+        "datetime",
+        "boolean",
+        "free_text",
+        "identifier_like",
+        "unknown"
+      ],
+      "non_null_count": 750,
+      "unique_count": 5,
+      "sample_values": [
+        "2022",
+        "2023",
+        "2024",
+        "2025",
+        "2026"
+      ]
+    },
+    {
+      "name": "mobility_count_bucket",
+      "semantic_type": "categorical",
+      "possible_semantic_types": [
+        "categorical",
+        "numeric",
+        "datetime",
+        "boolean",
+        "free_text",
+        "identifier_like",
+        "unknown"
+      ],
+      "non_null_count": 750,
+      "unique_count": 3,
+      "sample_values": [
+        "0",
+        "1",
+        "2+"
+      ]
+    },
+    {
+      "name": "had_mobility",
+      "semantic_type": "numeric",
+      "possible_semantic_types": [
+        "categorical",
+        "numeric",
+        "datetime",
+        "boolean",
+        "free_text",
+        "identifier_like",
+        "unknown"
+      ],
+      "non_null_count": 750,
+      "unique_count": 2,
+      "sample_values": [
+        "0",
+        "1"
+      ]
+    }
+  ],
+  "selection": {
+    "drop_columns": [
+      "study_type",
+      "gender"
+    ],
+    "quasi_identifiers": [
+      "faculty",
+      "degree_level",
+      "graduation_year"
+    ],
+    "sensitive_attributes": [
+      "had_mobility",
+      "mobility_count_bucket",
+      "eu_noneu",
+      "short_long_term"
+    ],
+    "report_columns": [
+      "graduation_year",
+      "faculty",
+      "degree_level",
+      "had_mobility",
+      "mobility_record_count",
+      "mobility_count_bucket",
+      "eu_noneu",
+      "short_long_term"
+    ]
+  },
+  "suggestions": {
+    "qi_candidates": [
+      [
+        "had_mobility",
+        "eu_noneu"
+      ],
+      [
+        "degree_level",
+        "study_type"
+      ],
+      [
+        "graduation_year",
+        "had_mobility"
+      ],
+      [
+        "study_type",
+        "had_mobility"
+      ],
+      [
+        "mobility_count_bucket",
+        "had_mobility",
+        "mobility_record_count"
+      ],
+      [
+        "mobility_count_bucket",
+        "had_mobility"
+      ],
+      [
+        "mobility_count_bucket",
+        "mobility_record_count"
+      ],
+      [
+        "had_mobility",
+        "mobility_record_count"
+      ],
+      [
+        "faculty",
+        "had_mobility"
+      ],
+      [
+        "study_type",
+        "graduation_year"
+      ]
+    ],
+    "generalization_candidates": {
+      "study_type": [
+        "University",
+        "Professional"
+      ],
+      "faculty": [
+        "UP FHS",
+        "UP FM",
+        "UP FAMNIT",
+        "UP FVZ",
+        "UP PEF",
+        "UP IAM",
+        "UP FTS - TURISTICA"
+      ],
+      "degree_level": [
+        "Bachelor",
+        "Master",
+        "PhD"
+      ],
+      "gender": [
+        "M",
+        "F"
+      ],
+      "eu_noneu": [
+        "EU-27",
+        "Non-EU"
+      ],
+      "short_long_term": [
+        "Short-term",
+        "Long-term"
+      ],
+      "mobility_count_bucket": [
+        "0",
+        "1",
+        "2+"
+      ]
+    }
+  },
+  "transformations": {
+    "eu_noneu": {
+      "operation": "fill_missing_literal",
+      "source_column": "eu_noneu",
+      "value": "No mobility"
+    },
+    "short_long_term": {
+      "operation": "fill_missing_literal",
+      "source_column": "short_long_term",
+      "value": "No mobility"
+    }
+  },
+  "generalizations": {
+    "degree_level": {
+      "Bachelor": "Undergraduate",
+      "Master": "Graduate",
+      "PhD": "Graduate"
+    },
+    "faculty": {
+      "UP FHS": "Society & Culture",
+      "UP FM": "Business & Economics",
+      "UP FAMNIT": "STEM",
+      "UP FVZ": "Health Sciences",
+      "UP PEF": "Society & Culture",
+      "UP IAM": "STEM",
+      "UP FTS - TURISTICA": "Business & Economics"
+    }
+  },
+  "privacy_targets": {
+    "target_k": 3,
+    "sensitive_attributes_for_checks": [
+      "had_mobility",
+      "mobility_count_bucket",
+      "eu_noneu",
+      "short_long_term"
+    ]
+  },
+  "outputs": {
+    "anonymized_dataset_path": "output/configurable/anonymized_dataset.xlsx",
+    "privacy_metrics_path": "output/configurable/privacy_metrics.json",
+    "refinement_path": "output/configurable/refinement_iteration.json"
+  }
+}

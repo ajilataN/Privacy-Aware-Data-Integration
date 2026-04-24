@@ -11,7 +11,7 @@ from src.configurable_pipeline import (
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Inspect graduates and mobility datasets and generate an editable JSON config template.",
+        description="Inspect graduates and mobility datasets and generate an editable preparation-stage JSON config.",
     )
     parser.add_argument(
         "--graduates",
@@ -24,14 +24,19 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to mobility file or folder",
     )
     parser.add_argument(
-        "--student-id-column",
+        "--left-join-column",
         default="enrollment_number",
-        help="Optional explicit join column used in both datasets",
+        help="Join column for the graduates dataset",
+    )
+    parser.add_argument(
+        "--right-join-column",
+        default="enrollment_number",
+        help="Join column for the mobility dataset",
     )
     parser.add_argument(
         "--output",
         default="output/config/bootstrap_config.json",
-        help="Output JSON template path",
+        help="Output preparation-stage JSON template path",
     )
     return parser
 
@@ -48,7 +53,8 @@ def main() -> None:
         mobility_df=mobility_df,
         graduates_path=args.graduates,
         mobility_path=args.mobility,
-        join_key=args.student_id_column,
+        left_join_key=args.left_join_column,
+        right_join_key=args.right_join_column,
     )
 
     output_path = write_json(config, args.output)
