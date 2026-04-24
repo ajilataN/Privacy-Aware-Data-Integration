@@ -48,7 +48,7 @@
     }
   },
   "prepared_dataset": {
-    "path": "output/configurable/prepared_dataset.xlsx"
+    "path": "output/prepared_dataset.xlsx"
   },
   "columns": [
     {
@@ -400,8 +400,8 @@
     ]
   },
   "outputs": {
-    "anonymized_dataset_path": "output/configurable/anonymized_dataset.xlsx",
-    "privacy_metrics_path": "output/configurable/privacy_metrics.json",
-    "refinement_path": "output/configurable/refinement_iteration.json"
+    "anonymized_dataset_path": "output/anonymized_dataset.xlsx",
+    "privacy_metrics_path": "output/anonymization_metrics.json",
+    "refinement_path": "output/anonymization_refinement.json"
   }
 }

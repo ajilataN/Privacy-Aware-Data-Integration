@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from src.configurable.preparation import (
+from src.configurable.prepared_dataset import (
     suggest_default_prepared_drop_columns,
     suggest_preparation_transformations,
 )
@@ -15,7 +15,7 @@ from src.configurable.profiling import (
 )
 
 
-def build_bootstrap_config(
+def build_preparation_config(
     graduates_df: pd.DataFrame,
     mobility_df: pd.DataFrame,
     graduates_path: str,
@@ -106,7 +106,7 @@ def build_bootstrap_config(
             "transformations": preparation_transformations,
         },
         "outputs": {
-            "prepared_dataset_path": "output/configurable/prepared_dataset.xlsx",
-            "anonymization_config_path": "output/configurable/anonymization_config.json",
+            "prepared_dataset_path": "output/prepared_dataset.xlsx",
+            "anonymization_config_path": "config/anonymization_config.json",
         },
     }

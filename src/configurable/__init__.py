@@ -1,19 +1,18 @@
-from src.configurable.bootstrap import build_bootstrap_config
-from src.configurable.configurator import run_configured_pipeline
+from src.configurable.anonymization_runner import run_anonymization
 from src.configurable.io_utils import ensure_parent_dir, load_json, write_json, write_tabular_dataset
-from src.configurable.models import AnonymizationOutputs, PipelineOutputs, PreparationOutputs
-from src.configurable.preparation import build_anonymization_config, prepare_dataset_for_anonymization
+from src.configurable.models import AnonymizationOutputs, PreparationOutputs
+from src.configurable.preparation_config import build_preparation_config
+from src.configurable.prepared_dataset import build_anonymization_config, build_prepared_dataset
 
 __all__ = [
     "AnonymizationOutputs",
-    "PipelineOutputs",
     "PreparationOutputs",
-    "build_bootstrap_config",
+    "build_preparation_config",
     "build_anonymization_config",
+    "build_prepared_dataset",
     "ensure_parent_dir",
     "load_json",
-    "prepare_dataset_for_anonymization",
-    "run_configured_pipeline",
+    "run_anonymization",
     "write_json",
     "write_tabular_dataset",
 ]

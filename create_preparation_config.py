@@ -2,16 +2,16 @@ from __future__ import annotations
 
 import argparse
 
-from src.configurable_pipeline import (
-    build_bootstrap_config,
-    load_any_dataset,
+from src.configurable import (
+    build_preparation_config,
     write_json,
 )
+from src.loader import load_any_dataset
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Inspect graduates and mobility datasets and generate an editable preparation-stage JSON config.",
+        description="Inspect graduates and mobility datasets and generate an editable preparation config.",
     )
     parser.add_argument(
         "--graduates",
@@ -35,8 +35,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--output",
-        default="output/config/bootstrap_config.json",
-        help="Output preparation-stage JSON template path",
+        default="config/preparation_config.json",
+        help="Output preparation config path",
     )
     return parser
 
@@ -48,7 +48,7 @@ def main() -> None:
     graduates_df = load_any_dataset(args.graduates)
     mobility_df = load_any_dataset(args.mobility)
 
-    config = build_bootstrap_config(
+    config = build_preparation_config(
         graduates_df=graduates_df,
         mobility_df=mobility_df,
         graduates_path=args.graduates,
@@ -58,7 +58,7 @@ def main() -> None:
     )
 
     output_path = write_json(config, args.output)
-    print(f"Bootstrap config written to {output_path}")
+    print(f"Preparation config written to {output_path}")
 
 
 if __name__ == "__main__":

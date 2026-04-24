@@ -3,10 +3,10 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from src.configurable_pipeline import (
+from src.configurable import (
     ensure_parent_dir,
     load_json,
-    run_configured_pipeline,
+    run_anonymization,
     write_json,
     write_tabular_dataset,
 )
@@ -14,16 +14,16 @@ from src.configurable_pipeline import (
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Run the anonymization stage from a prepared-dataset JSON config.",
+        description="Run anonymization from an anonymization config.",
     )
     input_group = parser.add_mutually_exclusive_group(required=True)
     input_group.add_argument(
         "--config",
-        help="Path to the edited anonymization-stage JSON config file",
+        help="Path to the edited anonymization config file",
     )
     input_group.add_argument(
         "--refinement",
-        help="Path to a refinement_iteration.json file. The runner will use its next_config section for another anonymization iteration.",
+        help="Path to an anonymization refinement file. The runner will use its next_config section for another anonymization iteration.",
     )
     return parser
 
@@ -42,13 +42,13 @@ def main() -> None:
                 "The provided refinement file does not contain a next_config section."
             )
 
-    outputs = run_configured_pipeline(config)
+    outputs = run_anonymization(config)
 
     anonymized_path = config["outputs"]["anonymized_dataset_path"]
     metrics_path = config["outputs"]["privacy_metrics_path"]
     refinement_path = config["outputs"].get(
         "refinement_path",
-        "output/configurable/refinement_iteration.json",
+        "output/anonymization_refinement.json",
     )
 
     ensure_parent_dir(Path(anonymized_path))
@@ -58,8 +58,8 @@ def main() -> None:
     write_json(outputs.refinement_payload, refinement_path)
 
     print(f"Anonymized dataset written to {anonymized_path}")
-    print(f"Privacy metrics written to {metrics_path}")
-    print(f"Refinement output written to {refinement_path}")
+    print(f"Anonymization metrics written to {metrics_path}")
+    print(f"Anonymization refinement written to {refinement_path}")
 
 
 if __name__ == "__main__":

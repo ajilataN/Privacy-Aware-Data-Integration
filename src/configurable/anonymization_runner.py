@@ -9,7 +9,7 @@ from src.anonymization import (
     compute_t_closeness,
     suppress_small_equivalence_classes,
 )
-from src.configurable.models import PipelineOutputs
+from src.configurable.models import AnonymizationOutputs
 from src.configurable.refinement import build_refinement_payload
 from src.configurable.transformations import (
     apply_configured_semantic_types,
@@ -19,13 +19,13 @@ from src.configurable.transformations import (
 from src.loader import load_any_dataset
 
 
-def run_configured_pipeline(config: dict[str, Any]) -> PipelineOutputs:
+def run_anonymization(config: dict[str, Any]) -> AnonymizationOutputs:
     prepared_dataset_config = config.get("prepared_dataset", {})
     prepared_dataset_path = prepared_dataset_config.get("path")
     if not prepared_dataset_path:
         raise ValueError("Config must define prepared_dataset.path.")
 
-    prepared_df = load_any_dataset(prepared_dataset_path)
+    prepared_df = load_any_dataset(prepared_dataset_path, add_source_metadata=False)
     prepared_df = apply_configured_semantic_types(prepared_df, config.get("columns"))
     transformed_df = apply_transformations(prepared_df, config.get("transformations", {}))
     transformed_df = apply_generalizations(transformed_df, config.get("generalizations", {}))
@@ -77,7 +77,7 @@ def run_configured_pipeline(config: dict[str, Any]) -> PipelineOutputs:
 
     privacy_metrics["sensitive_attributes"] = sensitive_metrics
 
-    return PipelineOutputs(
+    return AnonymizationOutputs(
         anonymized_df=anonymized_df,
         privacy_metrics=privacy_metrics,
         refinement_payload=build_refinement_payload(

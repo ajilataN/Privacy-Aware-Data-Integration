@@ -3,10 +3,10 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from src.configurable_pipeline import (
+from src.configurable import (
+    build_prepared_dataset,
     ensure_parent_dir,
     load_json,
-    prepare_dataset_for_anonymization,
     write_json,
     write_tabular_dataset,
 )
@@ -14,12 +14,12 @@ from src.configurable_pipeline import (
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Run the preparation stage and generate the prepared merged dataset plus an anonymization config.",
+        description="Run the preparation stage and generate the prepared dataset plus an anonymization config.",
     )
     parser.add_argument(
         "--config",
-        default="output/config/bootstrap_config.json",
-        help="Path to the edited preparation-stage JSON config file",
+        default="config/preparation_config.json",
+        help="Path to the edited preparation config file",
     )
     return parser
 
@@ -29,7 +29,7 @@ def main() -> None:
     args = parser.parse_args()
 
     config = load_json(args.config)
-    outputs = prepare_dataset_for_anonymization(config)
+    outputs = build_prepared_dataset(config)
 
     prepared_dataset_path = config["outputs"]["prepared_dataset_path"]
     anonymization_config_path = config["outputs"]["anonymization_config_path"]

@@ -140,14 +140,14 @@ def build_anonymization_config(
             "sensitive_attributes_for_checks": [],
         },
         "outputs": {
-            "anonymized_dataset_path": "output/configurable/anonymized_dataset.xlsx",
-            "privacy_metrics_path": "output/configurable/privacy_metrics.json",
-            "refinement_path": "output/configurable/refinement_iteration.json",
+            "anonymized_dataset_path": "output/anonymized_dataset.xlsx",
+            "privacy_metrics_path": "output/anonymization_metrics.json",
+            "refinement_path": "output/anonymization_refinement.json",
         },
     }
 
 
-def prepare_dataset_for_anonymization(config: dict[str, Any]) -> PreparationOutputs:
+def build_prepared_dataset(config: dict[str, Any]) -> PreparationOutputs:
     graduates_df = load_any_dataset(config["datasets"]["graduates_path"])
     mobility_df = load_any_dataset(config["datasets"]["mobility_path"])
     columns_config = config.get("columns", {})

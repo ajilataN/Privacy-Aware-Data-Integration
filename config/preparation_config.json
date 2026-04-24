@@ -1234,7 +1234,7 @@
     }
   },
   "outputs": {
-    "prepared_dataset_path": "output/configurable/prepared_dataset.xlsx",
-    "anonymization_config_path": "output/configurable/anonymization_config.json"
+    "prepared_dataset_path": "output/prepared_dataset.xlsx",
+    "anonymization_config_path": "config/anonymization_config.json"
   }
 }

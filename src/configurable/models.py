@@ -17,6 +17,3 @@ class AnonymizationOutputs:
     anonymized_df: pd.DataFrame
     privacy_metrics: dict[str, Any]
     refinement_payload: dict[str, Any]
-
-
-PipelineOutputs = AnonymizationOutputs
